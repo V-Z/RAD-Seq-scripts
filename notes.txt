@@ -1,0 +1,16 @@
+- 01-05 run were fast, just on login node
+
+- abel_00*, abel_03* are submit and worker are array jobs for Oslo cluster (named Abel), one per sample, each sample is in folder named its name
+- sample naming convention: AA012k (AA= A. arenosa, 012 = pop number three digits, k = individual)
+- haplotype calling (abel_04*) done separately for diploid and tetraploid samples
+
+- abel_04 is parallel job for Abel cluster
+
+- for ploidy level and other data regarding pops. see our GoogleDoc  table
+- AA = A. arenosa, AL = A. lyrata
+
+- I will give you:
+- A.lyrata reference genome (with all necessary index etc files for BWA-mem and GATK
+- masking file for excessive heterozygosity (sites with putative paralogs) - for last filtering step
+
+- filtering of VCF is for further discussion

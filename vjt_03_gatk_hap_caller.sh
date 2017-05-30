@@ -235,7 +235,6 @@ find $OUTDIR/ -name *.fq.bz2 -print | egrep '.*' > /dev/null && toolcheck parall
 
 echo
 echo "Mapping of paired and orphaned reads and postprocessing of output BAM files"
-echo
 
 # Mapping of paired and orphaned reads
 for OUTDIRD in `find $OUTDIR -name '*.fq*' -printf '%h\n' | sort -u`; do
@@ -249,9 +248,9 @@ for OUTDIRD in `find $OUTDIR -name '*.fq*' -printf '%h\n' | sort -u`; do
 	# Do the mapping separately paired files and the orphaned reads (reads without a mate)
 	echo "Starting mapping of paired and orphaned reads"
 	echo
-	bwa mem $REFB *trm_R1* *trm_R2* | samtools view -bu | samtools sort -l 9 -o $(basename $OUTDIRD)"_paired.bam" || operationfailed
-	bwa mem $REFB *unp_R1* | samtools view -bu | samtools sort -l 9 -o $(basename $OUTDIRD)"_unpaired_R1.bam" || operationfailed
-	bwa mem $REFB *unp_R2* | samtools view -bu | samtools sort -l 9 -o $(basename $OUTDIRD)"_unpaired_R2.bam" || operationfailed
+	bwa-0.7.3a mem $REFB *trm_R1* *trm_R2* | samtools view -bu | samtools sort -l 9 -o $(basename $OUTDIRD)"_paired.bam" || operationfailed
+	bwa-0.7.3a mem $REFB *unp_R1* | samtools view -bu | samtools sort -l 9 -o $(basename $OUTDIRD)"_unpaired_R1.bam" || operationfailed
+	bwa-0.7.3a mem $REFB *unp_R2* | samtools view -bu | samtools sort -l 9 -o $(basename $OUTDIRD)"_unpaired_R2.bam" || operationfailed
 	# Remove original inputs from final destination (and trimming logs, if presented)
 	rm *trm_R{1,2}* *unp_R{1,2}* *trim.log* 2>/dev/null
 	echo
@@ -284,20 +283,9 @@ for OUTDIRD in `find $OUTDIR -name '*.fq*' -printf '%h\n' | sort -u`; do
 		echo "Indexing the BAM"
 		echo
 		$JAVA -Xmx$JAVAMEM -jar $PICARD BuildBamIndex INPUT=$BAMFILEBASE.rg.bam || operationfailed
-		# Run RealignerTargetCreator and IndelRealigner on these bam files
-		echo
-		echo "Realigning indels"
-		echo
-		$JAVA -Xmx$JAVAMEM -jar $GATK -T RealignerTargetCreator -R $REFB -I $BAMFILEBASE.rg.bam -o $BAMFILEBASE.intervals || operationfailed
-		$JAVA -Xmx$JAVAMEM -jar $GATK -T IndelRealigner -R $REFB -I $BAMFILEBASE.rg.bam -targetIntervals $BAMFILEBASE.intervals -o $BAMFILEBASE.realign.bam || operationfailed
-		# Index this BAM
-		echo
-		echo "Indexing the BAM"
-		echo
-		$JAVA -Xmx$JAVAMEM -jar $PICARD BuildBamIndex INPUT=$BAMFILEBASE.realign.bam || operationfailed
 		done
 	# Clean up all those temporary files
-	rm *.mergeRun.bam* *.rg.bam* *.rg.bai *.intervals
+	rm *.mergeRun.bam
 	cd $STARTDIR
 	done
 echo
@@ -311,11 +299,11 @@ echo
 # Run HaplotypeCaller on each DIPLOID sample to produce genomic VCF
 for OUTDIRD in `find $OUTDIR -type d -print | grep 'dip'`; do
 	cd $OUTDIRD
-	BAMHCFILE=(*.realign.bam)
-	BAMHCFILEBASE=${BAMHCFILE%.realign.bam}
+	BAMHCFILE=(*_rg.bam)
+	BAMHCFILEBASE=${BAMHCFILE%_rg.bam}
 	echo "Processing diploid $BAMHCFILEBASE at `date`"
 	echo
-	$JAVA -Xmx$JAVAMEM -jar $GATK -R $REFB -T HaplotypeCaller -I $BAMHCFILEBASE".realign.bam" -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 2 -o $BAMHCFILEBASE".raw.g.vcf.gz" || operationfailed
+	$JAVA -Xmx$JAVAMEM -jar $GATK -R $REFB -T HaplotypeCaller -I $BAMHCFILEBASE"_rg.bam" -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 2 -o $BAMHCFILEBASE".raw.g.vcf.gz" || operationfailed
 	rm $REFB* ${REFB%.*}.dict
 	cd $STARTDIR
 	echo
@@ -324,21 +312,21 @@ for OUTDIRD in `find $OUTDIR -type d -print | grep 'dip'`; do
 # Run HaplotypeCaller on each TETRAPLOID sample to produce genomic VCF
 for OUTDIRD in `find $OUTDIR -type d -print | grep 'tet'`; do
 	cd $OUTDIRD
-	BAMHCFILE=(*.realign.bam)
-	BAMHCFILEBASE=${BAMHCFILE%.realign.bam}
+	BAMHCFILE=(*_rg.bam)
+	BAMHCFILEBASE=${BAMHCFILE%_rg.bam}
 	echo "Processing tetraploid $BAMHCFILEBASE at `date`"
 	echo
-	$JAVA -Xmx$JAVAMEM -jar $GATK -R $REFB -T HaplotypeCaller -I $BAMHCFILEBASE".realign.bam" -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 4 -o $BAMHCFILEBASE".raw.g.vcf.gz" || operationfailed
+	$JAVA -Xmx$JAVAMEM -jar $GATK -R $REFB -T HaplotypeCaller -I $BAMHCFILEBASE"_rg.bam" -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 4 -o $BAMHCFILEBASE".raw.g.vcf.gz" || operationfailed
 	rm $REFB* ${REFB%.*}.dict
 	cd $STARTDIR
 	echo
 	done
 
-# Calculating depth of coverage for each *.realign.bam file
+# Calculating depth of coverage for each *_rg.bam file
 echo "Calculating statistics of depth of coverage - they will be in file \"$OUTDIR/depth_of_coverage.tsv\""
 echo
 echo -e "Sample\tMin\t1stQu\tMedian\tMean\t3rdQu\tMax" > $OUTDIR/depth_of_coverage.tsv
-for OUTDIRD in `find $OUTDIR -name *.realign.bam -print`; do
+for OUTDIRD in `find $OUTDIR -name *_rg.bam -print`; do
 	echo "Processing $OUTDIRD"
 	echo "$OUTDIRD" | sed -i 's/^.\+\///' >> $OUTDIR/depth_of_coverage.txt || operationfailed
 	samtools depth $OUTDIRD | sed 's/[[:blank:]]\+/ /g' | cut -d ' ' -f 3 | Rscript $SCRIPTDIR/stat_depth_of_coverage.r >> $OUTDIR/depth_of_coverage.txt || operationfailed
@@ -347,7 +335,7 @@ echo
 
 # Clean-up of the statistics
 echo "Postprocessing file with statistics"
-sed -i ':a;N;$!ba;s/\.realign\.bam\n//' $OUTDIR/depth_of_coverage.txt
+sed -i ':a;N;$!ba;s/\_rg\.bam\n//' $OUTDIR/depth_of_coverage.txt
 cat $OUTDIR/depth_of_coverage.txt | sed 's/[[:blank:]]\+/ /g' | tr " " "\t" | grep -v "^.*Min.*1st.*Qu.*Median.*Mean.*3rd.*Qu.*Max.*$" >> $OUTDIR/depth_of_coverage.tsv
 rm $OUTDIR/depth_of_coverage.txt
 echo

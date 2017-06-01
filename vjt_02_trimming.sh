@@ -261,7 +261,7 @@ for FQDIRD in `find $FQDIR -name '*.fq*' -printf '%h\n' | sort -u`; do
 
 	# Statistics
 	echo "Statistics"
-	printf '%s\t%s' $TEMPDIR/$FQDIRDO >> $STARTDIR/$OUTDIR/trimming_info.tsv  # print sample name
+	printf '%s\t%s' $TEMPDIR/$FQDIRDO >> $STARTDIR/$OUTDIR/trimming_info.tsv  # Print sample name
 	cat $TEMPDIR/$FQDIRDO"_trm_R1.fq" | echo $((`wc -l`/4)) | xargs printf '%s\t%s' >> $STARTDIR/$OUTDIR/trimming_info.tsv # No of R1 reads (N of lines /4)
 	cat $TEMPDIR/$FQDIRDO"_unp_R1.fq" | echo $((`wc -l`/4)) | xargs printf '%s\t%s' >> $STARTDIR/$OUTDIR/trimming_info.tsv # No of R1 unpaired reads (N of lines /4)
 	cat $TEMPDIR/$FQDIRDO"_unp_R2.fq" | echo $((`wc -l`/4)) | xargs printf '%s\t%s' >> $STARTDIR/$OUTDIR/trimming_info.tsv # No of R2 unpaired reads (N of lines /4)

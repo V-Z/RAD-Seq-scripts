@@ -249,25 +249,25 @@ echo "Copying files into final destination at `date`"
 cp -a $FQDIR/* $OUTDIR/ || operationfailed
 
 # If input files are compressed by BZIP2, uncompress them first
-find $OUTDIR/ -name "*.fq.bz2" -print | egrep '.*' > /dev/null && toolcheck parallel && echo && echo "Input files are compressed by BZIP2. Decompressing at `date`" && find $OUTDIR/ -name "*.fq.bz2" -print | parallel -j $NCPU "echo '{}' && bunzip2 '{}' || operationfailed"
+find $OUTDIR/ -name "*.fq.bz2" -print | egrep '.*' > /dev/null && toolcheck parallel && echo && echo "Input files are compressed by BZIP2. Decompressing at `date`" && find $OUTDIR/ -name "*.fq.bz2" -print | parallel -j $NCPU "echo '{}' && bunzip2 '{}'" || operationfailed
 
 echo
 echo "Mapping of paired and orphaned reads and postprocessing of output BAM files"
 
 echo
 echo "Copying references to working directories at `date`"
-find $OUTDIR -name "*trm_R1*" -print | parallel -j $NCPU "cp $REF* '{//}'/ && cp ${REF%.*}.dict '{//}'/ || operationfailed"
+find $OUTDIR -name "*trm_R1*" -print | parallel -j $NCPU "cp $REF* '{//}'/ && cp ${REF%.*}.dict '{//}'/" || operationfailed
 
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo
 echo "Starting mapping of paired reads at `date`"
-find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}' || operationfailed"
+find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
 
 echo "Starting mapping of orphaned reads (R1) at `date`"
-find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}' || operationfailed"
+find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
 
 echo "Starting mapping of orphaned reads (R2) at `date`"
-find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}' || operationfailed"
+find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at `date`"
 echo
@@ -326,17 +326,17 @@ echo
 # Diploids
 echo "Processing diploids at `date`"
 echo
-find $OUTDIR -name "*.rg.bam" -print | grep 'dip' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 2 -o '{.}'.raw.g.vcf.gz || operationfailed"
+find $OUTDIR -name "*.rg.bam" -print | grep 'dip' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 2 -o '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Tetraploids
 echo "Processing tetraploids at `date`"
 echo
-find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 2 -o '{.}'.raw.g.vcf.gz || operationfailed"
+find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 2 -o '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Deleting references in working directories
 echo
 echo "Deleting references from working directories"
-find $OUTDIR -name "$REFB" -print | parallel -j $NCPU "rm '{//}'/$REFB* '{//}'/${REF%.*}.dict || operationfailed"
+find $OUTDIR -name "$REFB" -print | parallel -j $NCPU "rm '{//}'/$REFB* '{//}'/${REFB%.*}.dict" || operationfailed
 echo
 
 # Calculating depth of coverage for each *.rg.bam file

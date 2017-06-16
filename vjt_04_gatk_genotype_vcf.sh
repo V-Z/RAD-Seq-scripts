@@ -21,7 +21,7 @@ TEMPDIR='' # Temporal directory for trimming
 echo
 
 # Parse initial arguments
-while getopts "hrvf:c:o:n:a:j:m:g:" INITARGS; do
+while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
 	case "$INITARGS" in
 		h) # Help and exit
 			echo "Usage options:"

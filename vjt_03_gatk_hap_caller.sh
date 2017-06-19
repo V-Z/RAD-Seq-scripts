@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Initialize variables
-SCRIPTDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ) # Determine script's directory
 FQDIR='' # Input directory
 NCPU='' # Number of CPU threads for parallel operations
 NCPUTEST='^[0-9]+$' # Testing if provided value is an integer
@@ -174,8 +173,8 @@ function toolcheck {
 	}
 
 toolcheck bwa
+toolcheck parallel
 toolcheck samtools
-toolcheck R
 
 # Checking if all required parameters are provided
 if [ -z "$FQDIR" ]; then
@@ -340,21 +339,14 @@ find $OUTDIR -name "$REFB" -print | parallel -j $NCPU "rm '{//}'/$REFB* '{//}'/$
 echo
 
 # Calculating depth of coverage for each *.rg.bam file
-echo "Calculating statistics of depth of coverage - they will be in file \"$OUTDIR/depth_of_coverage.tsv\""
+echo "Calculating statistics of depth of coverage - they will be in file \"$OUTDIR/depth_of_coverage.txt\""
+echo "Mapped paired reads" > $OUTDIR/depth_of_coverage.txt
+echo >> $OUTDIR/depth_of_coverage.txt
 echo
-echo -e "Sample\tMin\t1stQu\tMedian\tMean\t3rdQu\tMax" > $OUTDIR/depth_of_coverage.tsv
-for OUTDIRD in `find $OUTDIR -name "*.rg.bam" -print`; do
-	echo "Processing $OUTDIRD"
-	echo "$OUTDIRD" | sed 's/^.\+\///' >> $OUTDIR/depth_of_coverage.txt || operationfailed
-	samtools depth $OUTDIRD | sed 's/[[:blank:]]\+/ /g' | cut -d ' ' -f 3 | Rscript $SCRIPTDIR/stat_depth_of_coverage.r | grep -v "^.*Min.*1st.*Qu.*Median.*Mean.*3rd.*Qu.*Max.*$" >> $OUTDIR/depth_of_coverage.txt || operationfailed
-	done
-echo
-
-# Clean-up of the statistics
-echo "Postprocessing file with statistics"
-for L in `wc -l $OUTDIR/depth_of_coverage.txt`; do sed -i ':a;N;$!ba;s/\.rg\.bam\n//' $OUTDIR/depth_of_coverage.txt; done
-cat $OUTDIR/depth_of_coverage.txt | sed 's/[[:blank:]]\+/ /g' | tr " " "\t" >> $OUTDIR/depth_of_coverage.tsv
-rm $OUTDIR/depth_of_coverage.txt
+find $OUTDIR -name "*_paired.bam" -print | parallel -j $NCPU "echo && echo '{}' && echo '{/}' >> $OUTDIR/depth_of_coverage.txt && samtools flagstat '{}' >> $OUTDIR/depth_of_coverage.txt && echo >> $OUTDIR/depth_of_coverage.txt" || operationfailed
+echo "Read groups" > $OUTDIR/depth_of_coverage.txt
+echo >> $OUTDIR/depth_of_coverage.txt
+find $OUTDIR -name "*.rg.bam" -print | parallel -j $NCPU "echo && echo '{}' && echo '{/}' >> $OUTDIR/depth_of_coverage.txt && samtools flagstat '{}' >> $OUTDIR/depth_of_coverage.txt && echo >> $OUTDIR/depth_of_coverage.txt" || operationfailed
 echo
 
 echo "End: `date`"

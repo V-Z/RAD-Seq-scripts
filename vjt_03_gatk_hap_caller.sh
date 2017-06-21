@@ -338,15 +338,31 @@ echo "Deleting references from working directories"
 find $OUTDIR -name "$REFB" -print | parallel -j $NCPU "rm '{//}'/$REFB* '{//}'/${REFB%.*}.dict" || operationfailed
 echo
 
-# Calculating depth of coverage for each *.rg.bam file
-echo "Calculating statistics of depth of coverage - they will be in file \"$OUTDIR/depth_of_coverage.txt\""
-echo "Mapped paired reads" > $OUTDIR/depth_of_coverage.txt
-echo >> $OUTDIR/depth_of_coverage.txt
+# Calculating depth of coverage for each file
+echo "Calculating statistics of depth of coverage - they will be in file \"$OUTDIR/mapping_stats.txt\""
+# Mapped paired reads
+echo "Mapped paired reads"
+echo "Mapped paired reads" > $OUTDIR/mapping_stats.txt
+echo >> $OUTDIR/mapping_stats.txt
+for OUTDIRD in `find $OUTDIR -name "*_paired.bam" -print`; do
+	echo
+	echo "Processing $(basename $OUTDIRD)"
+	echo "$(basename $OUTDIRD)" >> $OUTDIR/mapping_stats.txt
+	samtools flagstat $OUTDIRD >> $OUTDIR/mapping_stats.txt || operationfailed
+	echo >> $OUTDIR/mapping_stats.txt
+	done
+# Read groups
 echo
-find $OUTDIR -name "*_paired.bam" -print | parallel -j $NCPU "echo && echo '{}' && echo '{/}' >> $OUTDIR/depth_of_coverage.txt && samtools flagstat '{}' >> $OUTDIR/depth_of_coverage.txt && echo >> $OUTDIR/depth_of_coverage.txt" || operationfailed
-echo "Read groups" > $OUTDIR/depth_of_coverage.txt
-echo >> $OUTDIR/depth_of_coverage.txt
-find $OUTDIR -name "*.rg.bam" -print | parallel -j $NCPU "echo && echo '{}' && echo '{/}' >> $OUTDIR/depth_of_coverage.txt && samtools flagstat '{}' >> $OUTDIR/depth_of_coverage.txt && echo >> $OUTDIR/depth_of_coverage.txt" || operationfailed
+echo "Read groups"
+echo "Read groups" >> $OUTDIR/mapping_stats.txt
+echo >> $OUTDIR/mapping_stats.txt
+for OUTDIRD in `find $OUTDIR -name "*.rg.bam" -print`; do
+	echo
+	echo "Processing $(basename $OUTDIRD)"
+	echo "$(basename $OUTDIRD)" >> $OUTDIR/mapping_stats.txt
+	samtools flagstat $OUTDIRD >> $OUTDIR/mapping_stats.txt || operationfailed
+	echo >> $OUTDIR/mapping_stats.txt
+	done
 echo
 
 echo "End: `date`"

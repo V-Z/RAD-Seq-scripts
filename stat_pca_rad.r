@@ -1,7 +1,8 @@
 ## Libraries
 # Install packages
-install.packages(pkgs=c("ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP"), lib="rpkgs", repos="https://cran.wu.ac.at/", dependencies=c("Depends", "Imports"))
+# install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP"), lib="rpkgs", repos="https://cran.wu.ac.at/", dependencies=c("Depends", "Imports"))
 # Libraries
+library(package=stringi, lib.loc="rpkgs")
 library(package=ade4, lib.loc="rpkgs")
 library(package=adegenet, lib.loc="rpkgs")
 library(package=adegraphics, lib.loc="rpkgs")
@@ -9,6 +10,7 @@ library(package=vcfR, lib.loc="rpkgs")
 library(package=ape, lib.loc="rpkgs")
 library(package=pegas, lib.loc="rpkgs")
 library(package=StAMPP, lib.loc="rpkgs")
+# library(stringi)
 # library(ade4)
 # library(adegenet)
 # library(adegraphics)
@@ -158,7 +160,7 @@ glPcaFast <- function(x, center=TRUE, scale=FALSE, nf=NULL, loadings=TRUE, allel
 	}
 
 # Import SNP data from VCF - necessary to change path using setwd()
-vcf <- read.vcfR(vcf.data, nrows=1000)
+vcf <- read.vcfR(vcf.data, nrows=10000)
 # Checks
 head(vcf)
 vcf@fix[1:10,1:5]
@@ -184,7 +186,7 @@ dev.off()
 # Boxplot
 pdf("DP_persample_vcfR_detail.pdf", width=35, height=7)
 par(mar=c(8, 4, 1, 1))
-boxplot(vcf.dp, las=3, col=c("#C0C0C0", "#808080"), ylab="Read Depth (DP)", las=2, cex=0.7, ylim=c(0,50))
+boxplot(vcf.dp, las=3, col=c("#C0C0C0", "#808080"), ylab="Read Depth (DP)", las=2, cex=0.7, ylim=c(0, 50))
 abline(h=4, col="red")
 dev.off()
 
@@ -197,27 +199,27 @@ rad.pca <- glPcaFast(rad.genlight, nf=5)
 
 # Save nice figs
 pdf("PCA_all_SNPs_ax12.pdf", width=14, height=7)
-g1 <- s.class(rad.pca$scores, pop(rad.genlight),  xax=1, yax=2, col=transp(col, 0.6), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=T, pgrid.draw=F, plot=FALSE)
-g2 <- s.label(rad.pca$scores, xax=1, yax=2, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=T, pgrid.draw=F, plabels.cex=1, plot=FALSE)
+g1 <- s.class(rad.pca$scores, pop(rad.genlight),  xax=1, yax=2, col=transp("blue", 0.6), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=TRUE, pgrid.draw=FALSE, plot=FALSE)
+g2 <- s.label(rad.pca$scores, xax=1, yax=2, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=TRUE, pgrid.draw=FALSE, plabels.cex=1, plot=FALSE)
 ADEgS(c(g1, g2), layout=c(1, 2))
 dev.off()
 
 pdf("PCA_all_SNPs_ax13.pdf", width=14, height=7)
-g1 <- s.class(rad.pca$scores, pop(rad.genlight),  xax=1, yax=3, col=transp(col, 0.6), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=T, pgrid.draw=F, plot=FALSE)
-g2 <- s.label(rad.pca$scores, xax=1, yax=3, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=T, pgrid.draw=F, plabels.cex=1, plot=FALSE)
+g1 <- s.class(rad.pca$scores, pop(rad.genlight),  xax=1, yax=3, col=transp("blue", 0.6), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=TRUE, pgrid.draw=FALSE, plot=FALSE)
+g2 <- s.label(rad.pca$scores, xax=1, yax=3, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=TRUE, pgrid.draw=FALSE, plabels.cex=1, plot=FALSE)
 ADEgS(c(g1, g2), layout=c(1, 2))
 dev.off()
 
 # Ploidy - differentiated plots
 pdf ("PCA_all_ploidycol_SNPs_ax12.pdf", width=14, height=7)
-g1 <- s.class(rad.pca$scores, as.factor(as.vector(ploidy(rad.genlight))), xax=1, yax=2, col=transp(c("#FF0000", "#0000FF")), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=T, pgrid.draw=F, plab.cex=0, plot=FALSE)
-g2 <- s.label(rad.pca$scores, xax=1, yax=2, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=T, pgrid.draw=F, plabels.cex=1, plot=FALSE)
+g1 <- s.class(rad.pca$scores, as.factor(as.vector(ploidy(rad.genlight))), xax=1, yax=2, col=transp(c("#FF0000", "#0000FF")), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=TRUE, pgrid.draw=FALSE, plab.cex=0, plot=FALSE)
+g2 <- s.label(rad.pca$scores, xax=1, yax=2, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=TRUE, pgrid.draw=FALSE, plabels.cex=1, plot=FALSE)
 ADEgS(c(g1, g2), layout=c(1, 2))
 dev.off()
 
 ## StAMPP and distance-based analyses
 # Calculate Nei's distances between individuals/pops
 rad.d.ind <- stamppNeisD(rad.genlight, pop=FALSE) # Nei's 1972 distance between individuals
-stamppPhylip(rad.d.ind, file="aa.indiv_Neis_distance.phy.dst") # Export matrix for SplitsTree
+stamppPhylip(rad.d.ind, file="rad.indiv_Neis_distance.phy.dst") # Export matrix for SplitsTree
 rad.d.pop <- stamppNeisD(rad.genlight, pop=TRUE) # Nei's 1972 distance between populations
-stamppPhylip(aa.D.pop, file="aa.pops_Neis_distance.phy.dst") # Export matrix for SplitsTree
+stamppPhylip(rad.d.pop, file="rad.pops_Neis_distance.phy.dst") # Export matrix for SplitsTree

@@ -288,7 +288,8 @@ cd $VCFDIR
 # Hardfilter SNPs from this joint file using recommended parameters for SNPS and exclude SNPs from set of putatively paralogue loci
 echo "Extracting non-paralogous SNPs from joint VCF $VCFFILEB..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILEB -selectType SNP -o $VCFFILESNP -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals $EXCLUDEPARALOGSB --excludeNonVariants --selectTypeToExclude INDEL || operationfailed
+# TODO Add option to handle '--exclude_sample_file ../indivs_to_exclude.txt' by command line parameter
+$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILEB -selectType SNP -o $VCFFILESNP --exclude_sample_file ../indivs_to_exclude.txt -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals $EXCLUDEPARALOGSB --excludeNonVariants || operationfailed
 echo
 echo "File with extracted non-paralogous SNPs was saved as $VCFFILESNP"
 echo
@@ -320,7 +321,7 @@ echo
 # Set the filtering
 echo "Marking filtered sites in the joint VCF $VCFFILESNPBIAL..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNPBIAL -o $VCFFILESNPBIAL.dp$GENOTFILTDP.vcf.gz --genotypeFilterExpression "DP < $GENOTFILTDP" --genotypeFilterName DP-$GENOTFILTDP --setFilteredGtToNocall || operationfailed #
+$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNPBIAL -o $VCFFILESNPBIAL.dp$GENOTFILTDP.vcf.gz --genotypeFilterExpression "DP > $GENOTFILTDP" --genotypeFilterName DP-$GENOTFILTDP --setFilteredGtToNocall || operationfailed
 echo
 echo "Marked filtered sites were saved as $VCFFILESNPBIAL.dp$GENOTFILTDP.vcf.gz"
 echo
@@ -351,7 +352,6 @@ echo
 export VCFR="$VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz"
 # Copy R script to working directory
 cp $SCRIPTDIR/stat_pca_rad.r . || operationfailed
-mkdir rpkgs
 # Do the calculations in R
 echo "Calculating statistics, PCAs and distances in $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz using R"
 R CMD BATCH stat_pca_rad.r || operationfailed

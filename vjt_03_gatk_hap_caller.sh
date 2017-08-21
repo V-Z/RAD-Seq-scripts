@@ -260,13 +260,13 @@ find $OUTDIR -name "*trm_R1*" -print | parallel -j $NCPU "cp $REF* '{//}'/ && cp
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo
 echo "Starting mapping of paired reads at `date`"
-find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
+find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
 
 echo "Starting mapping of orphaned reads (R1) at `date`"
-find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
 
 echo "Starting mapping of orphaned reads (R2) at `date`"
-find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at `date`"
 echo
@@ -338,31 +338,15 @@ echo "Deleting references from working directories"
 find $OUTDIR -name "$REFB" -print | parallel -j $NCPU "rm '{//}'/$REFB* '{//}'/${REFB%.*}.dict" || operationfailed
 echo
 
-# Calculating depth of coverage for each file
+# Calculating depth of coverage for each *.rg.bam file
 echo "Calculating statistics of depth of coverage - they will be in file \"$OUTDIR/mapping_stats.txt\""
-# Mapped paired reads
-echo "Mapped paired reads"
 echo "Mapped paired reads" > $OUTDIR/mapping_stats.txt
 echo >> $OUTDIR/mapping_stats.txt
-for OUTDIRD in `find $OUTDIR -name "*_paired.bam" -print`; do
-	echo
-	echo "Processing $(basename $OUTDIRD)"
-	echo "$(basename $OUTDIRD)" >> $OUTDIR/mapping_stats.txt
-	samtools flagstat $OUTDIRD >> $OUTDIR/mapping_stats.txt || operationfailed
-	echo >> $OUTDIR/mapping_stats.txt
-	done
-# Read groups
 echo
-echo "Read groups"
-echo "Read groups" >> $OUTDIR/mapping_stats.txt
+find $OUTDIR -name "*_paired.bam" -print | parallel -j $NCPU "echo && echo '{}' && echo '{/}' >> $OUTDIR/mapping_stats.txt && samtools flagstat '{}' >> $OUTDIR/mapping_stats.txt && echo >> $OUTDIR/mapping_stats.txt" || operationfailed
+echo "Read groups" > $OUTDIR/mapping_stats.txt
 echo >> $OUTDIR/mapping_stats.txt
-for OUTDIRD in `find $OUTDIR -name "*.rg.bam" -print`; do
-	echo
-	echo "Processing $(basename $OUTDIRD)"
-	echo "$(basename $OUTDIRD)" >> $OUTDIR/mapping_stats.txt
-	samtools flagstat $OUTDIRD >> $OUTDIR/mapping_stats.txt || operationfailed
-	echo >> $OUTDIR/mapping_stats.txt
-	done
+find $OUTDIR -name "*.rg.bam" -print | parallel -j $NCPU "echo && echo '{}' && echo '{/}' >> $OUTDIR/mapping_stats.txt && samtools flagstat '{}' >> $OUTDIR/mapping_stats.txt && echo >> $OUTDIR/mapping_stats.txt" || operationfailed
 echo
 
 echo "End: `date`"

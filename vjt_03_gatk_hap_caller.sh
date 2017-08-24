@@ -330,7 +330,7 @@ find $OUTDIR -name "*.rg.bam" -print | grep 'dip' | parallel -j $((NCPU-1)) "ech
 # Tetraploids
 echo "Processing tetraploids at `date`"
 echo
-find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 2 -o '{.}'.raw.g.vcf.gz" || operationfailed
+find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 --output_mode EMIT_VARIANTS_ONLY -ploidy 4 -o '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Deleting references in working directories
 echo

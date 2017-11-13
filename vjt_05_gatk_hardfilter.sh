@@ -289,7 +289,8 @@ cd $VCFDIR
 echo "Extracting non-paralogous SNPs from joint VCF $VCFFILEB..."
 echo
 # TODO Add option to handle '--exclude_sample_file ../indivs_to_exclude.txt' by command line parameter
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILEB -selectType SNP -o $VCFFILESNP --exclude_sample_file ../indivs_to_exclude.txt -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals $EXCLUDEPARALOGSB --excludeNonVariants || operationfailed
+# $JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILEB -selectType SNP -o $VCFFILESNP --exclude_sample_file ../indivs_to_exclude.txt -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals $EXCLUDEPARALOGSB --excludeNonVariants || operationfailed
+$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILEB -selectType SNP -o $VCFFILESNP -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals $EXCLUDEPARALOGSB --excludeNonVariants || operationfailed
 echo
 echo "File with extracted non-paralogous SNPs was saved as $VCFFILESNP"
 echo

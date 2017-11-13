@@ -47,7 +47,7 @@ while getopts "hrvf:c:o:a:j:m:p:g:" INITARGS; do
 			echo "* BWA, http://bio-bwa.sourceforge.net/"
 			echo "* GATK, https://software.broadinstitute.org/gatk/"
 			echo "* GNU Parallel, https://www.gnu.org/software/parallel/"
-			echo "* Java, https://java.com/ or http://openjdk.java.net/"
+			echo "* Java, https://java.com/"
 			echo "* Picard, https://broadinstitute.github.io/picard/"
 			echo "* Samtools, http://samtools.sourceforge.net/"
 			echo

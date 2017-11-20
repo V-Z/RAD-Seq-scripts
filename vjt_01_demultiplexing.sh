@@ -26,7 +26,7 @@ while getopts "hrvs:c:o:f:x:u:d" INITARGS; do
 			echo -e "\t-c\tNumber of CPU threads to use for parallel operations (parameter \"-j\" of GNU Parallel). If not provided, default is 2."
 			echo -e "\t-o\tOutput directory. It should be empty."
 			echo -e "\t-f\tInput directory with FASTQ files saved as \"*.$SUFIX\"."
-			echo -e "\t-x\t"
+			echo -e "\t-x\tCustom sufix of compressed FASTQ sequences. Default is 'txt.gz'. String can contain numbers, letters, dots, or underscores"
 			echo -e "\t-u\tCustom uncompressing command for compressed FASTQ files. Use 'zcat' (default) for gunzip (*.gz), 'bzcat' for bunzip2 (*.bz2), or 'lzcat' for LZMA (*.xz) archives."
 			echo -e "\t-d\tDo not delete temporal files and keep FASTQ files in output directory sorted according to runs (not in original directory)."
 			echo

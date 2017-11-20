@@ -248,7 +248,7 @@ echo "Copying files into final destination at `date`"
 cp -a $FQDIR/* $OUTDIR/ || operationfailed
 
 # If input files are compressed by BZIP2, uncompress them first
-find $OUTDIR/ -name "*.fq.bz2" -print | egrep '.*' > /dev/null && toolcheck parallel && echo && echo "Input files are compressed by BZIP2. Decompressing at `date`" && find $OUTDIR/ -name "*.fq.bz2" -print | parallel -j $NCPU "echo '{}' && bunzip2 '{}'" || operationfailed
+find $OUTDIR/ -name "*.fq.bz2" -print | egrep '.*' > /dev/null && toolcheck parallel && echo && echo "Input files are compressed by BZIP2. Decompressing at `date`" && find $OUTDIR/ -name "*.fq.bz2" -print | { parallel -j $NCPU "echo '{}' && bunzip2 '{}'" || operationfailed; }
 
 echo
 echo "Mapping of paired and orphaned reads and postprocessing of output BAM files"
@@ -260,13 +260,13 @@ find $OUTDIR -name "*trm_R1*" -print | parallel -j $NCPU "cp $REF* '{//}'/ && cp
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo
 echo "Starting mapping of paired reads at `date`"
-find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
+find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
 
 echo "Starting mapping of orphaned reads (R1) at `date`"
-find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
 
 echo "Starting mapping of orphaned reads (R2) at `date`"
-find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at `date`"
 echo
@@ -299,11 +299,12 @@ for OUTDIRD in `find $OUTDIR -name '*.bam' -printf '%h\n' | sort -u`; do
 		echo
 		# Extract run number for RGID assignment and add RG info headers
 		RUNNUMBER=`echo $BAMFILERUNBASE | grep -o "run[[:digit:]]"` # Get the run number from AA016ac_run2_paired, e.g. run2
-		RGLB=`basename $OUTDIRD.lib1`
+		RGLB=`basename $OUTDIRD.lib1 | sed 's/_run[[:digit:]]_[dipte]\{3\}//'`
 		RGPU=$RUNNUMBER.unit1
+		RGSM=`basename $OUTDIRD | sed 's/_run[[:digit:]]_[dipte]\{3\}//'`
 		echo "Modifying read groups"
 		echo
-		$JAVA -Xmx$JAVAMEM -jar $PICARD AddOrReplaceReadGroups INPUT=$BAMFILEBASE.mergeRun.bam OUTPUT=$BAMFILEBASE.rg.bam RGID=$RUNNUMBER RGLB=$RGLB RGPL=$PLATFORM RGSM=$OUTDIRD RGPU=$RGPU || operationfailed
+		$JAVA -Xmx$JAVAMEM -jar $PICARD AddOrReplaceReadGroups INPUT=$BAMFILEBASE.mergeRun.bam OUTPUT=$BAMFILEBASE.rg.bam RGID=$RUNNUMBER RGLB=$RGLB RGPL=$PLATFORM RGPU=$RGPU RGSM=$RGSM || operationfailed
 		# Index this BAM
 		echo
 		echo "Indexing the BAM"
@@ -324,12 +325,11 @@ echo
 
 # Diploids
 echo "Processing diploids at `date`"
-echo
 find $OUTDIR -name "*.rg.bam" -print | grep 'dip' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 -ploidy 2 -o '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Tetraploids
-echo "Processing tetraploids at `date`"
 echo
+echo "Processing tetraploids at `date`"
 find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -variant_index_type LINEAR -variant_index_parameter 128000 -ploidy 4 -o '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Deleting references in working directories

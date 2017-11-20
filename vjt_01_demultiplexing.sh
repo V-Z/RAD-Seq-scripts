@@ -216,12 +216,12 @@ echo
 # Make output directories according to read IDs
 # Move archived reads into their respective directories
 echo "Making directories according to read IDs and moving respective sequences files into their directories"
-cut -f 3 $SAMPLESLIST | sort | uniq | parallel -j $NCPU "echo '{}' && mkdir -p $OUTDIR/{}/demultiplexed && mv $FASTQINPUTDIR/*{}*.$SUFIX $OUTDIR/{}/" || operationfailed
+cut -f 3 $SAMPLESLIST | sort -u | parallel -j $NCPU "echo '{}' && mkdir -p $OUTDIR/{}/demultiplexed && mv $FASTQINPUTDIR/*{}*.$SUFIX $OUTDIR/{}/" || operationfailed
 echo
 
 # Process list of samples to extract bcfiles (names and barcodes) and save them into respective directories
 echo "Creating barcode files"
-for FASTQREADGZ in `cut -f 3 $SAMPLESLIST | sort | uniq`; do
+for FASTQREADGZ in `cut -f 3 $SAMPLESLIST | sort -u`; do
 	echo "Processing $FASTQREADGZ"
 	grep $FASTQREADGZ $SAMPLESLIST | cut -f 1,2 > $OUTDIR/$FASTQREADGZ/barcodes.tsv || operationfailed
 	done
@@ -230,12 +230,12 @@ echo
 # The demultiplexing
 echo "Doing the demultiplexing. This may take longer time..."
 echo
-cut -f 3 $SAMPLESLIST | sort | uniq | parallel -j $NCPU "echo '{}' && date && $DECOMPRESSER $OUTDIR/{}/*1_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R1.fq' --bol --mismatches 1 && $DECOMPRESSER $OUTDIR/{}/*2_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R2.fq' --bol --mismatches 1 && echo" || operationfailed
+cut -f 3 $SAMPLESLIST | sort -u | parallel -j $NCPU "echo '{}' && date && $DECOMPRESSER $OUTDIR/{}/*1_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R1.fq' --bol --mismatches 1 && $DECOMPRESSER $OUTDIR/{}/*2_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R2.fq' --bol --mismatches 1 && echo" || operationfailed
 echo
 
 # Rename the unmatched files to contain run ID
 echo "Renaming the unmatched files to contain run ID"
-for DEMULTIPLEXEDDIR in `cut -f 3 $SAMPLESLIST | sort | uniq`; do
+for DEMULTIPLEXEDDIR in `cut -f 3 $SAMPLESLIST | sort -u`; do
 	for UNMF in $OUTDIR/$DEMULTIPLEXEDDIR/demultiplexed/unmatched*; do
 		echo -ne "Processing \"$DEMULTIPLEXEDDIR\" : \"$UNMF\"\r"
 		mv "$UNMF" "`echo $UNMF | sed "s/unmatched/unmatched_$DEMULTIPLEXEDDIR/"`" || operationfailed

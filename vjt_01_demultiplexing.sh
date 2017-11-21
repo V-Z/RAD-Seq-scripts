@@ -231,7 +231,6 @@ echo
 echo "Doing the demultiplexing. This may take longer time..."
 echo
 cut -f 3 $SAMPLESLIST | sort -u | parallel -j $NCPU "echo '{}' && date && $DECOMPRESSER $OUTDIR/{}/*1_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R1.fq' --bol --mismatches 1 && $DECOMPRESSER $OUTDIR/{}/*2_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R2.fq' --bol --mismatches 1 && echo" || operationfailed
-echo
 
 # Rename the unmatched files to contain run ID
 echo "Renaming the unmatched files to contain run ID"
@@ -239,9 +238,9 @@ for DEMULTIPLEXEDDIR in `cut -f 3 $SAMPLESLIST | sort -u`; do
 	for UNMF in $OUTDIR/$DEMULTIPLEXEDDIR/demultiplexed/unmatched*; do
 		echo -ne "Processing \"$DEMULTIPLEXEDDIR\" : \"$UNMF\"\r"
 		mv "$UNMF" "`echo $UNMF | sed "s/unmatched/unmatched_$DEMULTIPLEXEDDIR/"`" || operationfailed
+		echo
 		done
 	done
-echo
 echo
 
 # Move files of respective samples into their directories
@@ -255,7 +254,7 @@ echo
 
 # Compress all FASTQ files
 echo "Compressing FASTQ files"
-find $OUTDIR/ -name *.fq -print | parallel -j $NCPU "echo '{}' && bzip2 '{}'" || operationfailed
+find $OUTDIR/ -name "*.fq" -print | parallel -j $NCPU "bzip2 -v -9 '{}'" || operationfailed
 echo
 
 # Cleanup of temporal files

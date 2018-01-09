@@ -300,7 +300,7 @@ for OUTDIRD in `find $OUTDIR -name '*.bam' -printf '%h\n' | sort -u`; do
 		# Merge all BAM files (should be 3) with the same file base
 		echo "Merging all BAM files"
 		echo
-		$JAVA -Xmx$(($JAVAMEMM * $NCPU)) -jar $PICARD MergeSamFiles $(printf 'INPUT=%s ' $BAMFILEBASE*.bam) OUTPUT=$BAMFILEBASE.mergeRun.bam USE_THREADING=true || operationfailed
+		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -jar $PICARD MergeSamFiles $(printf 'INPUT=%s ' $BAMFILEBASE*.bam) OUTPUT=$BAMFILEBASE.mergeRun.bam USE_THREADING=true || operationfailed
 		echo
 		# Extract run number for RGID assignment and add RG info headers
 		RUNNUMBER=`echo $BAMFILERUNBASE | grep -o "run[[:digit:]]"` # Get the run number from AA016ac_run2_paired, e.g. run2
@@ -309,12 +309,12 @@ for OUTDIRD in `find $OUTDIR -name '*.bam' -printf '%h\n' | sort -u`; do
 		RGSM=`basename $OUTDIRD | sed 's/_run[[:digit:]]_[dipte]\{3\}//'`
 		echo "Modifying read groups"
 		echo
-		$JAVA -Xmx$(($JAVAMEMM * $NCPU)) -jar $PICARD AddOrReplaceReadGroups INPUT=$BAMFILEBASE.mergeRun.bam OUTPUT=$BAMFILEBASE.rg.bam RGID=$RUNNUMBER RGLB=$RGLB RGPL=$PLATFORM RGPU=$RGPU RGSM=$RGSM || operationfailed
+		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -jar $PICARD AddOrReplaceReadGroups INPUT=$BAMFILEBASE.mergeRun.bam OUTPUT=$BAMFILEBASE.rg.bam RGID=$RUNNUMBER RGLB=$RGLB RGPL=$PLATFORM RGPU=$RGPU RGSM=$RGSM || operationfailed
 		# Index this BAM
 		echo
 		echo "Indexing the BAM"
 		echo
-		$JAVA -Xmx$(($JAVAMEMM * $NCPU)) -jar $PICARD BuildBamIndex INPUT=$BAMFILEBASE.rg.bam || operationfailed
+		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -jar $PICARD BuildBamIndex INPUT=$BAMFILEBASE.rg.bam || operationfailed
 		done
 	# Clean up all those temporary files
 	rm *.mergeRun.bam

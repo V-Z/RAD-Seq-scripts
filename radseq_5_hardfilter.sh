@@ -295,10 +295,12 @@ echo
 echo "File with extracted non-paralogous SNPs was saved as $VCFFILESNP"
 echo
 
-# Create a filtering criterion
+# FIXME Create a filtering criterion
+# GATK 3.5 "QD < 2.0 || MQ < 40.0 || MQRankSum < -12.5"
+# Full best practice "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0"
 echo "Hard filtering SNPs from joint VCF $VCFFILESNP..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNP -o $VCFFILESNPHARD --filterExpression "QD < 2.0" --filterName "Rad_filter1" --filterExpression "FS > 60.0" --filterName "Rad_filter2" --filterExpression "MQ < 40.0" --filterName "Rad_filter3" --filterExpression "MQRankSum < -12.5" --filterName "Rad_filter4" --filterExpression "ReadPosRankSum < -8.0" --filterName "Rad_filter5" --filterExpression "SOR < 3.0" --filterName "Rad_filter6" || operationfailed
+$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNP -o $VCFFILESNPHARD --filterExpression "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0" --filterName "Rad_filter1" || operationfailed
 echo
 echo "Hard filtered SNPs were saved as $VCFFILESNPHARD"
 echo
@@ -319,20 +321,42 @@ echo
 echo "Biallelic SNPs were saved as $VCFFILESNPBIAL"
 echo
 
-# Set the filtering
+################################################################################
+
+# # this tool works until 3.4 ... does not work on multiallelic SNPs produced by 3.5, just biallelic
+# # emit only sites in which x% of samples have sufficient coverage (e.g. 50% at least 8x coverage)
+# echo "Creating intervals for loci covered min $MinCoverage-times in defined $MinPercIndivs of indivs from joint vcf...."
+# java -Xmx12g -jar /usit/abel/u1/filipko/programs/GATK/3.3.0/GenomeAnalysisTK.jar -T CoveredByNSamplesSites \
+#    -R $REFSEQ \
+#    -V joint.hardfilt.SNP.PASS.BIALL.vcf.gz \
+#    -out dp$MinCoverage.perc$MinPercIndivs.BIALL.intervals \
+#    --minCoverage $MinCoverage \
+#    --percentageOfSamples $MinPercIndivs
+#
+# # select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
+# echo "Selecting variants based on presence in $MinPercIndivs of indivs"
+# java -Xmx12g -jar /usit/abel/u1/filipko/programs/GATK/3.5/GenomeAnalysisTK.jar -T SelectVariants \
+#    -R $REFSEQ \
+#    -V joint.hardfilt.SNP.PASS.BIALL.vcf.gz \
+#    -o joint.hardfilt.SNP.PASS.BIALL.dp$MinCoverage.perc$MinPercIndivs.vcf.gz \
+#    -L dp$MinCoverage.perc$MinPercIndivs.BIALL.intervals
+
+################################################################################
+
+# FIXME Set the filtering
 echo "Marking filtered sites in the joint VCF $VCFFILESNPBIAL..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNPBIAL -o $VCFFILESNPBIAL.dp$GENOTFILTDP.vcf.gz --genotypeFilterExpression "DP > $GENOTFILTDP" --genotypeFilterName DP-$GENOTFILTDP --setFilteredGtToNocall || operationfailed
+$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNPBIAL -o ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz --genotypeFilterExpression "DP < $GENOTFILTDP" --genotypeFilterName DP-$GENOTFILTDP --setFilteredGtToNocall || operationfailed
 echo
 echo "Marked filtered sites were saved as $VCFFILESNPBIAL.dp$GENOTFILTDP.vcf.gz"
 echo
 
-# Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
+# FIXME Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
 echo "Selecting variants based on presence in $GENOTFILTDP of indivs in ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz joint VCF..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILESNPBIAL.dp$GENOTFILTDP.vcf.gz -o $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz --maxNOCALLfraction $MAXFRACTFILTGENOT || operationfailed # --maxFractionFilteredGenotypes $MAXFRACTFILTGENOT
+$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz -o $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz --maxFractionFilteredGenotypes $MAXFRACTFILTGENOT || operationfailed # --maxNOCALLfraction $MAXFRACTFILTGENOT
 echo
-echo "Final selected variants were saved as $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz"
+echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz"
 echo
 
 echo "All output files are in directory \"$VCFDIR\" and names start with \"$OUTNAME*\""
@@ -344,22 +368,44 @@ rm $REFB* ${REFB%.*}.dict $EXCLUDEPARALOGSB || operationfailed
 echo
 
 # Statistics
-echo "Statistics of SNPs in $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz using bcftools"
-bcftools stats -s - $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz > $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.stats.txt || operationfailed
+echo "Statistics of SNPs in VCF files using bcftools"
+ls -1 *.vcf.gz | parallel -j 2 "echo '{/}' && bcftools stats -s - '{}' > '{.}'.stats.txt || operationfailed"
 echo
 
 # PCA and more statistics using R script
-# Variable storing filename for R
-export VCFR="$VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz"
-# Copy R script to working directory
-cp $SCRIPTDIR/stat_pca_rad.r . || operationfailed
-# Do the calculations in R
-echo "Calculating statistics, PCAs and distances in $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz using R"
-R CMD BATCH stat_pca_rad.r || operationfailed
-echo
+
+# Create directory for R outputs
+mkdir rstats
+
+# Do the calculations
+echo "Calculating statistics, PCAs and distances using R"
+for VCFGZ in `ls -1 *.vcf.gz`; do
+	echo "Processing $VCFGZ"
+	# Create output directory
+	mkdir rstats/$VCFGZ || operationfailed
+	# Go to output directory
+	cd rstats/$VCFGZ || operationfailed
+	# Copy R script to working directory
+	cp $SCRIPTDIR/stat_pca_rad.r . || operationfailed
+	# Copy R packages
+	cp -a $SCRIPTDIR/rpkgs .
+	# Copy processed file
+	cp ../../$VCFGZ . || operationfailed
+	# Prepare variable storing filename for R to read input tree
+	export VCFR="$VCFGZ"
+	# Do the calculations
+	R CMD BATCH stat_pca_rad.r
+	# Discard the variable
+	unset VCFR
+	# Cleanup
+	rm -rf rpkgs stat_pca_rad.r $VCFGZ || operationfailed
+	# Go back
+	cd ../..
+	done
+
 # Cleanup
+echo
 rm -rf rpkgs stat_pca_rad.r || operationfailed
-unset VCFR
 
 cd $STARTDIR
 

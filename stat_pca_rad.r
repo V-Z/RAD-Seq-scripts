@@ -1,23 +1,23 @@
 ## Libraries
 # Install packages
-# install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP"), lib="rpkgs", repos="https://cran.wu.ac.at/", dependencies=c("Depends", "Imports"))
+# install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP"), lib="rpkgs", repos="https://mirrors.nic.cz/R/", dependencies=c("Depends", "Imports"))
 # Libraries
-# library(package=stringi, lib.loc="rpkgs")
-# library(package=ade4, lib.loc="rpkgs")
-# library(package=adegenet, lib.loc="rpkgs")
-# library(package=adegraphics, lib.loc="rpkgs")
-# library(package=vcfR, lib.loc="rpkgs")
-# library(package=ape, lib.loc="rpkgs")
-# library(package=pegas, lib.loc="rpkgs")
-# library(package=StAMPP, lib.loc="rpkgs")
-library(stringi)
-library(ade4)
-library(adegenet)
-library(adegraphics)
-library(vcfR)
-library(ape)
-library(pegas)
-library(StAMPP)
+library(package=stringi, lib.loc="rpkgs")
+library(package=ade4, lib.loc="rpkgs")
+library(package=adegenet, lib.loc="rpkgs")
+library(package=adegraphics, lib.loc="rpkgs")
+library(package=vcfR, lib.loc="rpkgs")
+library(package=ape, lib.loc="rpkgs")
+library(package=pegas, lib.loc="rpkgs")
+library(package=StAMPP, lib.loc="rpkgs")
+# library(stringi)
+# library(ade4)
+# library(adegenet)
+# library(adegraphics)
+# library(vcfR)
+# library(ape)
+# library(pegas)
+# library(StAMPP)
 
 ## Input file
 vcf.data <- Sys.getenv("VCFR")
@@ -98,14 +98,14 @@ glPcaFast <- function(x, center=TRUE, scale=FALSE, nf=NULL, loadings=TRUE, allel
 	if(is.null(nf)) {
 		barplot(eigRes$values, main="Eigenvalues", col=heat.colors(rank))
 		cat("Select the number of axes: ")
-		nf <- as.integer(readLines(n = 1))
+		nf <- as.integer(readLines(n=1))
 		}
 	# Rescale PCs
 	res <- list()
 	res$eig <- eigRes$values
 	nf <- min(nf, sum(res$eig>1e-10))
 	# res$matprod <- allProd # For debugging
-	# use: li = XQU = V\Lambda^(1/2)
+	# use: li=XQU=V\Lambda^(1/2)
 	eigRes$vectors <- eigRes$vectors * sqrt(nInd(x)) # D-normalize vectors
 	res$scores <- sweep(eigRes$vectors[, 1:nf, drop=FALSE],2, sqrt(eigRes$values[1:nf]), FUN="*")
 	# Get loadings
@@ -115,9 +115,9 @@ glPcaFast <- function(x, center=TRUE, scale=FALSE, nf=NULL, loadings=TRUE, allel
 			vecSd <- sqrt(vecVar)
 			}
 		res$loadings <- matrix(0, nrow=nLoc(x), ncol=nf) # Create empty matrix
-		# use: c1 = X^TDV
-		# and X^TV = A_1 + ... + A_n
-		# with A_k = X_[k-]^T v[k-]
+		# use: c1=X^TDV
+		# and X^TV=A_1 + ... + A_n
+		# with A_k=X_[k-]^T v[k-]
 		myPloidy <- ploidy(x)
 		for(k in 1:nInd(x)){
 			temp <- as.integer(x@gen[[k]]) / myPloidy[k]
@@ -168,8 +168,8 @@ vcf@fix[1:10,1:5]
 # Convert to genlight
 rad.genlight <- vcfR2genlight.tetra(x=vcf, n.cores=2)
 locNames(rad.genlight) <- paste(vcf@fix[,1],vcf@fix[,2],sep="_") # Add real SNP.names
-pop(rad.genlight)<-substr(indNames(rad.genlight),8,12) # Add pop names: here pop names are first 3 chars of ind name
-indNames(rad.genlight)<-substr(indNames(rad.genlight),8,15)
+pop(rad.genlight) <- substr(indNames(rad.genlight),8,12) # Add pop names: here pop names are first 3 chars of ind name
+indNames(rad.genlight) <- substr(indNames(rad.genlight),8,15)
 
 ## Various checks
 # In VCF R
@@ -192,7 +192,7 @@ dev.off()
 
 # N missing SNPs per sample
 rad.x <- summary(t(as.matrix(rad.genlight)))
-write.table(rad.x[7,], file = "missing.persample.txt", sep = "\t") # NAs, if present, are in seventh row of summary
+write.table(rad.x[7,], file="missing.persample.txt", sep="\t") # NAs, if present, are in seventh row of summary
 
 ## PCA
 rad.pca <- glPcaFast(rad.genlight, nf=5)

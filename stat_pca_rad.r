@@ -1,6 +1,6 @@
 ## Libraries
 # Install packages
-# install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP"), lib="rpkgs", repos="https://mirrors.nic.cz/R/", dependencies=c("Depends", "Imports"))
+# install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP"), lib="rpkgs", repos="https://mirrors.nic.cz/R/", dependencies=TRUE)
 # Libraries
 library(package=stringi, lib.loc="rpkgs")
 library(package=ade4, lib.loc="rpkgs")

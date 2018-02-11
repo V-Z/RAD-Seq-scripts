@@ -1,6 +1,6 @@
 ## Libraries
 # Install packages
-# install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP"), lib="rpkgs", repos="https://mirrors.nic.cz/R/", dependencies=TRUE)
+# install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP", "memuse", "pinfsc50", "tidyr"), lib="rpkgs", repos="https://mirrors.nic.cz/R/", dependencies=TRUE)
 # Libraries
 library(package=stringi, lib.loc="rpkgs")
 library(package=ade4, lib.loc="rpkgs")
@@ -10,21 +10,13 @@ library(package=vcfR, lib.loc="rpkgs")
 library(package=ape, lib.loc="rpkgs")
 library(package=pegas, lib.loc="rpkgs")
 library(package=StAMPP, lib.loc="rpkgs")
-# library(stringi)
-# library(ade4)
-# library(adegenet)
-# library(adegraphics)
-# library(vcfR)
-# library(ape)
-# library(pegas)
-# library(StAMPP)
 
 ## Input file
 vcf.data <- Sys.getenv("VCFR")
 
 ## Functions
 # Conversion from vcfR object to genlight in tetraploids
-vcfR2genlight.tetra <- function (x, n.cores=1) {
+vcfR2genlight.tetra <- function(x, n.cores=2) {
 	bi <- is.biallelic(x)
 	if (sum(!bi) > 0) {
 		msg <- paste("Found", sum(!bi), "loci with more than two alleles.")
@@ -160,7 +152,7 @@ glPcaFast <- function(x, center=TRUE, scale=FALSE, nf=NULL, loadings=TRUE, allel
 	}
 
 # Import SNP data from VCF - necessary to change path using setwd()
-vcf <- read.vcfR(vcf.data, nrows=10000)
+vcf <- read.vcfR(vcf.data)
 # Checks
 head(vcf)
 vcf@fix[1:10,1:5]

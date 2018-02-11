@@ -321,28 +321,6 @@ echo
 echo "Biallelic SNPs were saved as $VCFFILESNPBIAL"
 echo
 
-################################################################################
-
-# # this tool works until 3.4 ... does not work on multiallelic SNPs produced by 3.5, just biallelic
-# # emit only sites in which x% of samples have sufficient coverage (e.g. 50% at least 8x coverage)
-# echo "Creating intervals for loci covered min $MinCoverage-times in defined $MinPercIndivs of indivs from joint vcf...."
-# java -Xmx12g -jar /usit/abel/u1/filipko/programs/GATK/3.3.0/GenomeAnalysisTK.jar -T CoveredByNSamplesSites \
-#    -R $REFSEQ \
-#    -V joint.hardfilt.SNP.PASS.BIALL.vcf.gz \
-#    -out dp$MinCoverage.perc$MinPercIndivs.BIALL.intervals \
-#    --minCoverage $MinCoverage \
-#    --percentageOfSamples $MinPercIndivs
-#
-# # select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
-# echo "Selecting variants based on presence in $MinPercIndivs of indivs"
-# java -Xmx12g -jar /usit/abel/u1/filipko/programs/GATK/3.5/GenomeAnalysisTK.jar -T SelectVariants \
-#    -R $REFSEQ \
-#    -V joint.hardfilt.SNP.PASS.BIALL.vcf.gz \
-#    -o joint.hardfilt.SNP.PASS.BIALL.dp$MinCoverage.perc$MinPercIndivs.vcf.gz \
-#    -L dp$MinCoverage.perc$MinPercIndivs.BIALL.intervals
-
-################################################################################
-
 # FIXME Set the filtering
 echo "Marking filtered sites in the joint VCF $VCFFILESNPBIAL..."
 echo
@@ -354,9 +332,9 @@ echo
 # FIXME Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
 echo "Selecting variants based on presence in $GENOTFILTDP of indivs in ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz joint VCF..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz -o $VCFFILESNPBIAL.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz --maxFractionFilteredGenotypes $MAXFRACTFILTGENOT || operationfailed # --maxNOCALLfraction $MAXFRACTFILTGENOT
+$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz -o $VCFFILESNPBIAL.dp$GENOTFILTDP.percmiss$MAXFRACTFILTGENOT.vcf.gz --maxNOCALLfraction $MAXFRACTFILTGENOT || operationfailed # --maxFractionFilteredGenotypes $MAXFRACTFILTGENOT
 echo
-echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.perc$MAXFRACTFILTGENOT.vcf.gz"
+echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.percmiss$MAXFRACTFILTGENOT.vcf.gz"
 echo
 
 echo "All output files are in directory \"$VCFDIR\" and names start with \"$OUTNAME*\""

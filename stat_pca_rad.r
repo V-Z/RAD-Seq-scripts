@@ -10,9 +10,10 @@ library(package=vcfR, lib.loc="rpkgs")
 library(package=ape, lib.loc="rpkgs")
 library(package=pegas, lib.loc="rpkgs")
 library(package=StAMPP, lib.loc="rpkgs")
+library(package=memuse, lib.loc="rpkgs")
 
 ## Input file
-vcf.data <- Sys.getenv("VCFR")
+vcf.file <- Sys.getenv("VCFR")
 
 ## Functions
 # Conversion from vcfR object to genlight in tetraploids
@@ -151,40 +152,32 @@ glPcaFast <- function(x, center=TRUE, scale=FALSE, nf=NULL, loadings=TRUE, allel
 	return(res)
 	}
 
-# Import SNP data from VCF - necessary to change path using setwd()
-vcf <- read.vcfR(vcf.data)
+## Import SNP data from VCF
+vcf.data <- read.vcfR(vcf.file)
 # Checks
-head(vcf)
-vcf@fix[1:10,1:5]
-
-# Convert to genlight
-rad.genlight <- vcfR2genlight.tetra(x=vcf, n.cores=2)
-locNames(rad.genlight) <- paste(vcf@fix[,1],vcf@fix[,2],sep="_") # Add real SNP.names
-pop(rad.genlight) <- substr(indNames(rad.genlight),8,12) # Add pop names: here pop names are first 3 chars of ind name
-indNames(rad.genlight) <- substr(indNames(rad.genlight),8,15)
+head(vcf.data)
+vcf.data@fix[1:10,1:5]
 
 ## Various checks
 # In VCF R
 # DP - quickcheck
-vcf.dp <- extract.gt(vcf, element='DP', as.numeric=TRUE)
+vcf.dp <- extract.gt(vcf.data, element='DP', as.numeric=TRUE)
 
 # Boxplot
-pdf("DP_persample_vcfR.pdf", width=35, height=7)
-par(mar=c(8, 4, 1, 1))
+pdf("dp_per_sample.pdf", width=35, height=7)
 boxplot(vcf.dp, las=3, col=c("#C0C0C0", "#808080"), ylab="Read Depth (DP)", las=2, cex=0.7)
-# abline(h=seq(0, 1e4, by=100), col="#C0C0C088")
-dev.off()
-
-# Boxplot
-pdf("DP_persample_vcfR_detail.pdf", width=35, height=7)
-par(mar=c(8, 4, 1, 1))
-boxplot(vcf.dp, las=3, col=c("#C0C0C0", "#808080"), ylab="Read Depth (DP)", las=2, cex=0.7, ylim=c(0, 50))
-abline(h=4, col="red")
+abline(h=mean(x=as.numeric(vcf.dp), na.rm=TRUE), col="red")
 dev.off()
 
 # N missing SNPs per sample
-rad.x <- summary(t(as.matrix(rad.genlight)))
-write.table(rad.x[7,], file="missing.persample.txt", sep="\t") # NAs, if present, are in seventh row of summary
+write.table(x=summary(t(as.matrix(rad.genlight)))[7,], file="missing_per_sample.txt", sep="\t")
+
+## Convert to genlight
+rad.genlight <- vcfR2genlight.tetra(x=vcf.data, n.cores=2)
+pop(rad.genlight) <- substr(indNames(rad.genlight), start=1, stop=4) # Add pop names: here beginning of individuals names
+# See names
+indNames(rad.genlight)
+pop(rad.genlight)
 
 ## PCA
 rad.pca <- glPcaFast(rad.genlight, nf=5)
@@ -212,6 +205,6 @@ dev.off()
 ## StAMPP and distance-based analyses
 # Calculate Nei's distances between individuals/pops
 rad.d.ind <- stamppNeisD(rad.genlight, pop=FALSE) # Nei's 1972 distance between individuals
-stamppPhylip(rad.d.ind, file="rad.indiv_Neis_distance.phy.dst") # Export matrix for SplitsTree
+stamppPhylip(rad.d.ind, file="neis_dist_inds.phy.dst") # Export matrix for SplitsTree
 rad.d.pop <- stamppNeisD(rad.genlight, pop=TRUE) # Nei's 1972 distance between populations
-stamppPhylip(rad.d.pop, file="rad.pops_Neis_distance.phy.dst") # Export matrix for SplitsTree
+stamppPhylip(rad.d.pop, file="neis_dist_pops.phy.dst") # Export matrix for SplitsTree

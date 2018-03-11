@@ -36,7 +36,7 @@ while getopts "hrvf:c:o:a:j:m:p:g:" INITARGS; do
 			echo -e "\t-o\tOutput directory. It should be empty."
 			echo -e "\t-a\tReference FASTA file."
 			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`; GATK requires Oracle Java)."
-			echo -e "\t-m\tMaximal memory consumption allowed to Picard and GATK in MB per one CPU thread. Input as common for 'jar -Xmx', e.g. 12000m for '-Xmx12000m'. Default is 2000m. Warning! This value will be multiplied bynumber of CPU threads (-c)."
+			echo -e "\t-m\tMaximal memory consumption allowed to Picard and GATK in MB per one CPU thread. Input as common for 'jar -Xmx', e.g. 12000m for '-Xmx12000m'. Default is 2000m. Warning! This value will be multiplied by number of CPU threads (-c)."
 			echo -e "\t-p\tPath to Picard JAR file."
 			echo -e "\t-g\tPath to GATK JAR file."
 			echo

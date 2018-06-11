@@ -11,17 +11,16 @@ NCPU='' # Number of CPU threads for parallel operations
 NCPUTEST='^[0-9]+$' # Testing if provided value is a number
 REF='' # Reference sequence
 REFB='' # Only filename of the reference sequence
-JAVA='' # PATH to custom Java binary
 JAVAMEM='' # Memory limit for Picard and GATK
 JAVAMEMTEST='^[0-9]+[kmgt]$' # Testing if provided value is a number with k, m, g or t
-GATK='' # Path to directory containing GATK JAR file
+GATK='' # Path to directory containing GATK script file
 OUTDIR='' # Output directory
 JOINTNAME='' # Base name of the output file
 TEMPDIR='' # Temporal directory for trimming
 echo
 
 # Parse initial arguments
-while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
+while getopts "hrvw:u:x:f:c:o:n:a:m:g:" INITARGS; do
 	case "$INITARGS" in
 		h) # Help and exit
 			echo "Usage options:"
@@ -36,9 +35,8 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
 			echo -e "\t-o\tOutput directory. It should be empty."
 			echo -e "\t-n\tBase name of output join VCF. Sufix (e.g. \".raw.vcf.gz\") will be added. Allowed characters are letters, numbers, underscore or dot. If not provided, default \"join\" will be used (e.g. \"join.raw.vcf.gz\")."
 			echo -e "\t-a\tReference FASTA file."
-			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`; GATK requires Oracle Java)."
 			echo -e "\t-m\tMaximal memory consumption allowed to GATK. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 24g."
-			echo -e "\t-g\tPath to GATK JAR file."
+			echo -e "\t-g\tPath to GATK script file (GATK 4 and above is required)."
 			echo
 			exit
 			;;
@@ -47,6 +45,7 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
 			echo "* GATK, https://software.broadinstitute.org/gatk/"
 			echo "* GNU Parallel, https://www.gnu.org/software/parallel/"
 			echo "* Java, https://java.com/ or http://openjdk.java.net/"
+			echo "* Python, https://www.python.org/"
 			echo
 			exit
 			;;
@@ -151,17 +150,6 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
 					exit 1
 					fi
 			;;
-		j) # Path to custom Java binary
-			if [ -x "$OPTARG" ]; then
-			JAVA="$OPTARG"
-			echo "Custom Java binary: $JAVA"
-			echo
-			else
-				echo "Error! You did not provide path to custom Java binary (-j) \"$OPTARG\"!"
-				echo
-				exit 1
-				fi
-			;;
 		m) # Maximal Java memory consumption
 			if [[ $OPTARG =~ $JAVAMEMTEST ]]; then
 			JAVAMEM="$OPTARG"
@@ -173,13 +161,13 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
 				exit 1
 				fi
 			;;
-		g) # Path to GATK JAR file
+		g) # Path to GATK script file
 			if [ -r "$OPTARG" ]; then
 			GATK="$OPTARG"
-			echo "GATK JAR file: $GATK"
+			echo "GATK script file: $GATK"
 			echo
 			else
-				echo "Error! You did not provide path to GATK JAR file (-g) \"$OPTARG\"!"
+				echo "Error! You did not provide path to GATK script file (-g) \"$OPTARG\"!"
 				echo
 				exit 1
 				fi
@@ -203,7 +191,9 @@ function toolcheck {
 	}
 
 toolcheck basename
+toolcheck java
 toolcheck parallel
+toolcheck python
 
 # Checking if all required parameters are provided
 if [ -z "$VCFDIR" ]; then
@@ -239,13 +229,6 @@ if [ -z "$REF" ]; then
 	exit 1
 	fi
 
-if [ -z "$JAVA" ]; then
-	toolcheck java
-	echo "Path to custom Java executable (-j) was not specified. Using default `which java`"
-	JAVA=$(which java)
-	echo
-	fi
-
 if [ -z "$JAVAMEM" ]; then
 	echo "Java memory consumption for GATK (-m) was not set. Using default value of 24g."
 	JAVAMEM='24g'
@@ -253,7 +236,7 @@ if [ -z "$JAVAMEM" ]; then
 	fi
 
 if [ -z "$GATK" ]; then
-	echo "Error! Path to GATK JAR file (-g) was not specified!"
+	echo "Error! Path to GATK script file (-g) was not specified!"
 	echo "See usage options: \"$0 -h\""
 	echo
 	exit 1
@@ -312,9 +295,13 @@ SAMPLELIST=$(ls -1 *.$VCFNAME$VCFCOMPRESSION | sed 's/^/-V /' | sed 's/$/ /' | t
 
 echo "Joining genotyping samples $SAMPLELIST at `date`"
 echo
+# Running Combine GVCFs
+$GATK --java-options "-Xmx$JAVAMEM" CombineGVCFs -O $JOINTNAME.comb$VCFOUTSUFIX -R $REFB $SAMPLELIST --convert-to-base-pair-resolution --create-output-variant-index --enable-all-annotations || operationfailed
+echo
+
 # Running Genotype GVCFs
 # NB check that (i) -Xmx has cpus-per-task*mem-per-cpu (e.g. 16*3=48) and (ii) -nt = cpus-per-task
-$JAVA -Xmx$JAVAMEM -jar $GATK -T GenotypeGVCFs -R $REFB $SAMPLELIST -nt $NCPU --includeNonVariantSites -o ../$JOINTNAME$VCFOUTSUFIX || operationfailed
+$GATK --java-options "-Xmx$JAVAMEM" GenotypeGVCFs -O ../$JOINTNAME$VCFOUTSUFIX -R $REFB -V $JOINTNAME.comb$VCFOUTSUFIX --create-output-variant-index --enable-all-annotations || operationfailed
 echo
 cd $STARTDIR
 

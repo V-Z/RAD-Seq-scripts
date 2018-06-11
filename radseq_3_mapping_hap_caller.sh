@@ -12,7 +12,7 @@ JAVAMEM='' # Memory limit for Picard and GATK
 JAVAMEMTEST='^[0-9]+m$' # Testing if provided value is a number with k, m, g or t
 PICARD='' # Path to directory containing Picard JAR file
 PLATFORM='illumina' # Sequencing platform
-GATK='' # Path to directory containing GATK JAR file
+GATK='' # Path to GATK script file
 OUTDIR='' # Output directory
 BAMLIST='' # List of BAM files in each directory
 BAMFILE='' # Currently processed BAM file
@@ -35,20 +35,21 @@ while getopts "hrvf:c:o:a:j:m:p:g:" INITARGS; do
 			echo -e "\t-c\tNumber of CPU threads to use for parallel operations (parameter \"-j\" of GNU Parallel). If not provided, default is 3."
 			echo -e "\t-o\tOutput directory. It should be empty."
 			echo -e "\t-a\tReference FASTA file."
-			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`; GATK requires Oracle Java)."
+			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`)."
 			echo -e "\t-m\tMaximal memory consumption allowed to Picard and GATK in MB per one CPU thread. Input as common for 'jar -Xmx', e.g. 12000m for '-Xmx12000m'. Default is 2000m. Warning! This value will be multiplied by number of CPU threads (-c)."
 			echo -e "\t-p\tPath to Picard JAR file."
-			echo -e "\t-g\tPath to GATK JAR file."
+			echo -e "\t-g\tPath to GATK script file (GATK 4 and above is required)."
 			echo
 			exit
 			;;
 		r) # References to cite and exit
 			echo "Software to cite:"
-			echo "* BWA, http://bio-bwa.sourceforge.net/"
+			echo "* BWA, http://bio-bwa-0.7.3a.sourceforge.net/"
 			echo "* GATK, https://software.broadinstitute.org/gatk/"
 			echo "* GNU Parallel, https://www.gnu.org/software/parallel/"
 			echo "* Java, https://java.com/"
 			echo "* Picard, https://broadinstitute.github.io/picard/"
+			echo "* Python, https://www.python.org/"
 			echo "* Samtools, http://samtools.sourceforge.net/"
 			echo
 			exit
@@ -143,13 +144,13 @@ while getopts "hrvf:c:o:a:j:m:p:g:" INITARGS; do
 				exit 1
 				fi
 			;;
-		g) # Path to GATK JAR file
+		g) # Path to GATK script file
 			if [ -r "$OPTARG" ]; then
 			GATK="$OPTARG"
-			echo "GATK JAR file: $GATK"
+			echo "GATK script file: $GATK"
 			echo
 			else
-				echo "Error! You did not provide path to GATK JAR file (-g) \"$OPTARG\"!"
+				echo "Error! You did not provide path to GATK script file (-g) \"$OPTARG\"!"
 				echo
 				exit 1
 				fi
@@ -172,8 +173,9 @@ function toolcheck {
 		}
 	}
 
-toolcheck bwa
+toolcheck bwa-0.7.3a
 toolcheck parallel
+toolcheck python
 toolcheck samtools
 
 # Checking if all required parameters are provided
@@ -225,7 +227,7 @@ if [ -z "$PICARD" ]; then
 	fi
 
 if [ -z "$GATK" ]; then
-	echo "Error! Path to GATK JAR file (-g) was not specified!"
+	echo "Error! Path to GATK script file (-g) was not specified!"
 	echo "See usage options: \"$0 -h\""
 	echo
 	exit 1
@@ -251,7 +253,7 @@ cp -a $FQDIR/* $OUTDIR/ || operationfailed
 find $OUTDIR/ -name "*.fq.bz2" -print | egrep '.*' > /dev/null && toolcheck parallel && echo && echo "Input files are compressed by BZIP2. Decompressing at `date`" && find $OUTDIR/ -name "*.fq.bz2" -print | { parallel -j $NCPU "echo '{}' && bunzip2 '{}'" || operationfailed; }
 
 echo
-echo "Mapping of paired and orphaned reads and postprocessing of output BAM files"
+echo "Mapping of paired and orphaned reads and post-processing of output BAM files"
 
 echo
 echo "Copying references to working directories at `date`"
@@ -260,15 +262,15 @@ find $OUTDIR -name "*trm_R1*" -print | parallel -j $NCPU "cp $REF* '{//}'/ && cp
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo
 echo "Starting mapping of paired reads at `date`"
-find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
+find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
 echo
 
 echo "Starting mapping of orphaned reads (R1) at `date`"
-find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
 echo
 
 echo "Starting mapping of orphaned reads (R2) at `date`"
-find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at `date`"
 echo
@@ -326,24 +328,24 @@ echo
 
 # Produce genomic VCF
 echo "Running HaplotypeCaller to produce genomic VCF files"
-echo
 
 # Diploids
+echo
 echo "Processing diploids at `date`"
-find $OUTDIR -name "*.rg.bam" -print | grep 'dip' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -ploidy 2 -o '{.}'.raw.g.vcf.gz" || operationfailed
+find $OUTDIR -name "*.rg.bam" -print | grep 'dip' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $GATK --java-options "-Xmx$JAVAMEM" HaplotypeCaller -R {//}/$REFB -I '{}' -ERC GVCF -ploidy 2 -O '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Tetraploids
 echo
 echo "Processing tetraploids at `date`"
-find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -ploidy 4 -o '{.}'.raw.g.vcf.gz" || operationfailed
+find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $GATK --java-options "-Xmx$JAVAMEM" HaplotypeCaller -R {//}/$REFB -I '{}' -ERC GVCF -ploidy 4 -O '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Deleting references in working directories
 echo
 echo "Deleting references from working directories"
 find $OUTDIR -name "$REFB" -print | parallel -j $NCPU "rm '{//}'/$REFB* '{//}'/${REFB%.*}.dict" || operationfailed
-echo
 
 # Calculating depth of coverage for each *.rg.bam file
+echo
 echo "Calculating statistics of depth of coverage - they will be in file \"$OUTDIR/mapping_stats.txt\""
 echo "Mapped paired reads" > $OUTDIR/mapping_stats.txt
 echo >> $OUTDIR/mapping_stats.txt

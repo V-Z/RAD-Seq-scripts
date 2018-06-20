@@ -34,7 +34,7 @@ while getopts "hrvf:c:o:a:j:m:t:" INITARGS; do
 			echo -e "\t-o\tOutput directory. It should be empty."
 			echo -e "\t-a\tFASTA file with adaptors."
 			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`)."
-			echo -e "\t-m\tMaximal memory consumption allowed to Picard and GATK. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 2g."
+			echo -e "\t-m\tMaximal memory consumption allowed to Picard. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 2g."
 			echo -e "\t-t\tTrimmomatic JAR file."
 			echo
 			exit

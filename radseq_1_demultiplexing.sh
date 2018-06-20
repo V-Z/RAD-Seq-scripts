@@ -25,7 +25,7 @@ while getopts "hrvs:c:o:f:x:u:d" INITARGS; do
 			echo -e "\t-s\tList of samples - TXT file with 3 columns separated by TAB: names of individuals, barcodes and read IDs."
 			echo -e "\t-c\tNumber of CPU threads to use for parallel operations (parameter \"-j\" of GNU Parallel). If not provided, default is 2."
 			echo -e "\t-o\tOutput directory. It should be empty."
-			echo -e "\t-f\tInput directory with FASTQ files saved as \"*.$SUFIX\"."
+			echo -e "\t-f\tInput directory with FASTQ files saved as e.g. \"*.txt.gz\" (see option \"-x\")."
 			echo -e "\t-x\tCustom sufix of compressed FASTQ sequences. Default is 'txt.gz'. String can contain numbers, letters, dots, or underscores"
 			echo -e "\t-u\tCustom uncompressing command for compressed FASTQ files. Use 'zcat' (default) for gunzip (*.gz), 'bzcat' for bunzip2 (*.bz2), or 'lzcat' for LZMA (*.xz) archives."
 			echo -e "\t-d\tDo not delete temporal files and keep FASTQ files in output directory sorted according to runs (not in original directory)."
@@ -123,7 +123,7 @@ while getopts "hrvs:c:o:f:x:u:d" INITARGS; do
 			case "$OPTARG" in
 				zcat) DECOMPRESSER='zcat';; # gunzip (*.gz) archives - default
 				bzcat) DECOMPRESSER='bzcat';; # bunzip2 (*.bz2) archives
-				lzcat) DECOMPRESSER='lzcat';; # LZMA (*.xz) archives
+				lzcat) DECOMPRESSER='lzcat -F auto';; # LZMA (*.xz) archives
 				*) echo
 					echo "Error! Invalid uncompressing command (-u) \"$OPTARG\"! Use 'zcat' for gunzip (*.gz), 'bzcat' for bunzip2 (*.bz2), or 'lzcat' for LZMA (*.xz) archives!"
 					echo
@@ -230,7 +230,7 @@ echo
 # The demultiplexing
 echo "Doing the demultiplexing. This may take longer time..."
 echo
-cut -f 3 $SAMPLESLIST | sort -u | parallel -j $NCPU "echo '{}' && date && $DECOMPRESSER $OUTDIR/{}/*1_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R1.fq' --bol --mismatches 1 && $DECOMPRESSER $OUTDIR/{}/*2_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R2.fq' --bol --mismatches 1 && echo" || operationfailed
+cut -f 3 $SAMPLESLIST | sort -u | parallel -j $NCPU "echo '{}' && date && $DECOMPRESSER $OUTDIR/{}/*R1_*.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R1.fq' --bol --mismatches 1 && $DECOMPRESSER $OUTDIR/{}/*R2_*.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R2.fq' --bol --mismatches 1 && echo" || operationfailed
 
 # Rename the unmatched files to contain run ID
 echo "Renaming the unmatched files to contain run ID"

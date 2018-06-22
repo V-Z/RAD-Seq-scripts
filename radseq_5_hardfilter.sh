@@ -14,8 +14,7 @@ REF='' # Reference sequence
 REFB='' # Only filename of the reference sequence
 EXCLUDEPARALOGS='' # Paralogs to exclude
 EXCLUDEPARALOGSB='' # Only file name of paralogs to exclude
-JAVA='' # PATH to custom Java binary
-JAVAMEM='' # Memory limit for Picard and GATK
+JAVAMEM='' # Memory limit for GATK
 JAVAMEMTEST='^[0-9]+[kmgt]$' # Testing if provided value is a number with k, m, g or t
 GATK='' # Path to directory containing GATK JAR file
 OUTNAME='' # Base name of the output file
@@ -27,7 +26,7 @@ GENOTFILTDP='' # Genotype filtering level
 echo
 
 # Parse initial arguments
-while getopts "hrvf:n:a:e:j:m:g:l:w:" INITARGS; do
+while getopts "hrvf:n:a:e:m:g:l:w:" INITARGS; do
 	case "$INITARGS" in
 		h) # Help and exit
 			echo "Usage options:"
@@ -38,12 +37,12 @@ while getopts "hrvf:n:a:e:j:m:g:l:w:" INITARGS; do
 			echo -e "\t-n\tBase name of output files. Allowed characters are letters, numbers, underscore or dot. If not provided, output files will start with name of input file."
 			echo -e "\t-a\tReference FASTA file."
 			echo -e "\t-e\tParalogs to exclude."
-			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`; GATK requires Oracle Java)."
 			echo -e "\t-m\tMaximal memory consumption allowed to GATK. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 12g."
 			echo -e "\t-g\tPath to GATK JAR file."
 			echo -e "\t-l\tMaximum fraction of samples filtered at the genotype level. Provide value from 0 to 1. Default is 0.1."
 			echo -e "\t-w\tMinimal required coverage. Provide an integer. Default is 8."
 			echo -e "\tOutput files will be in same directory as input file (-f)."
+			echo "This script requires 2 CPU threads to run properly."
 			echo
 			exit
 			;;
@@ -118,17 +117,6 @@ while getopts "hrvf:n:a:e:j:m:g:l:w:" INITARGS; do
 					echo
 					exit 1
 					fi
-			;;
-		j) # Path to custom Java binary
-			if [ -x "$OPTARG" ]; then
-			JAVA="$OPTARG"
-			echo "Custom Java binary: $JAVA"
-			echo
-			else
-				echo "Error! You did not provide path to custom Java binary (-j) \"$OPTARG\"!"
-				echo
-				exit 1
-				fi
 			;;
 		m) # Maximal Java memory consumption
 			if [[ $OPTARG =~ $JAVAMEMTEST ]]; then
@@ -228,13 +216,6 @@ if [ -z "$EXCLUDEPARALOGS" ]; then
 	exit 1
 	fi
 
-if [ -z "$JAVA" ]; then
-	toolcheck java
-	echo "Path to custom Java executable (-j) was not specified. Using default `which java`"
-	JAVA=$(which java)
-	echo
-	fi
-
 if [ -z "$JAVAMEM" ]; then
 	echo "Java memory consumption for GATK (-m) was not set. Using default value of 12g."
 	JAVAMEM="12g"
@@ -288,27 +269,26 @@ cd $VCFDIR
 # Hardfilter SNPs from this joint file using recommended parameters for SNPS and exclude SNPs from set of putatively paralogue loci
 echo "Extracting non-paralogous SNPs from joint VCF $VCFFILEB..."
 echo
-# TODO Add option to handle '--exclude_sample_file ../indivs_to_exclude.txt' by command line parameter
-# $JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILEB -selectType SNP -o $VCFFILESNP --exclude_sample_file ../indivs_to_exclude.txt -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals $EXCLUDEPARALOGSB --excludeNonVariants || operationfailed
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILEB -selectType SNP -o $VCFFILESNP -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals $EXCLUDEPARALOGSB --excludeNonVariants || operationfailed
+# TODO Add option to handle '--exclude-sample-name indivs_to_exclude.args' by command line parameter
+$GATK --java-options "-Xmx$JAVAMEM" SelectVariants -O $VCFFILESNP -V $VCFFILEB -R $REFB --select-type-to-include SNP -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --exclude-ids $EXCLUDEPARALOGSB --exclude-non-variants || operationfailed
 echo
 echo "File with extracted non-paralogous SNPs was saved as $VCFFILESNP"
 echo
 
-# FIXME Create a filtering criterion
+# Create a filtering criterion
 # GATK 3.5 "QD < 2.0 || MQ < 40.0 || MQRankSum < -12.5"
 # Full best practice "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0"
 echo "Hard filtering SNPs from joint VCF $VCFFILESNP..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNP -o $VCFFILESNPHARD --filterExpression "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0" --filterName "Rad_filter1" || operationfailed
+$GATK --java-options "-Xmx$JAVAMEM" VariantFiltration -O $VCFFILESNPHARD -V $VCFFILESNP -R $REFB --filter-expression "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0" --filter-name "Rad_filter1" || operationfailed
 echo
 echo "Hard filtered SNPs were saved as $VCFFILESNPHARD"
 echo
 
-# Extract SNPs (both bi- and multiallelic) passing the AA_filter1 criterion
+# Extract SNPs (both bi- and multiallelic) passing the previous criterion
 echo "Extracting only passing SNPs from joint VCF $VCFFILESNPHARD..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILESNPHARD -o $VCFFILESNPPASS --excludeFiltered || operationfailed
+$GATK --java-options "-Xmx$JAVAMEM" SelectVariants -O $VCFFILESNPPASS -V $VCFFILESNPHARD -R $REFB --exclude-filtered || operationfailed
 echo
 echo "Extracted passed SNPs from previous filtering were saved as $VCFFILESNPPASS"
 echo
@@ -316,23 +296,23 @@ echo
 # Extract BIALLELIC SNPs
 echo "Extracting only BIALLELIC SNPs from joint VCF $VCFFILESNPPASS..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILESNPPASS -o $VCFFILESNPBIAL --excludeFiltered --restrictAllelesTo BIALLELIC || operationfailed
+$GATK --java-options "-Xmx$JAVAMEM" SelectVariants -O $VCFFILESNPBIAL -V $VCFFILESNPPASS -R $REFB --exclude-filtered --restrict-alleles-to BIALLELIC || operationfailed
 echo
 echo "Biallelic SNPs were saved as $VCFFILESNPBIAL"
 echo
 
-# FIXME Set the filtering
+# Set the filtering
 echo "Marking filtered sites in the joint VCF $VCFFILESNPBIAL..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNPBIAL -o ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz --genotypeFilterExpression "DP < $GENOTFILTDP" --genotypeFilterName DP-$GENOTFILTDP --setFilteredGtToNocall || operationfailed
+$GATK --java-options "-Xmx$JAVAMEM" VariantFiltration -O ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz -V $VCFFILESNPBIAL -R $REFB --genotype-filter-expression "DP < $GENOTFILTDP" --genotype-filter-name DP-$GENOTFILTDP --set-filtered-genotype-to-no-call || operationfailed
 echo
 echo "Marked filtered sites were saved as $VCFFILESNPBIAL.dp$GENOTFILTDP.vcf.gz"
 echo
 
-# FIXME Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
+# Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
 echo "Selecting variants based on presence in $GENOTFILTDP of indivs in ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz joint VCF..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz -o $VCFFILESNPBIAL.dp$GENOTFILTDP.percmiss$MAXFRACTFILTGENOT.vcf.gz --maxNOCALLfraction $MAXFRACTFILTGENOT || operationfailed # --maxFractionFilteredGenotypes $MAXFRACTFILTGENOT
+$GATK --java-options "-Xmx$JAVAMEM" SelectVariants -O $VCFFILESNPBIAL.dp$GENOTFILTDP.percmiss$MAXFRACTFILTGENOT.vcf.gz -V ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz -R $REFB --max-nocall-fraction $MAXFRACTFILTGENOT || operationfailed # --max-fraction-filtered-genotypes $MAXFRACTFILTGENOT
 echo
 echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.percmiss$MAXFRACTFILTGENOT.vcf.gz"
 echo

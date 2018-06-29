@@ -277,7 +277,7 @@ SAMPLELIST=$(ls -1 *.$VCFNAME$VCFCOMPRESSION | sed 's/^/-V /' | sed 's/$/ /' | t
 echo "Joining genotyping samples $SAMPLELIST at `date`"
 echo
 # Running Combine GVCFs
-$GATK --java-options "-Xmx$JAVAMEM" CombineGVCFs -O $JOINTNAME.comb$VCFOUTSUFIX -R $REFB $SAMPLELIST --convert-to-base-pair-resolution --create-output-variant-index --enable-all-annotations || operationfailed
+$GATK --java-options "-Xmx$JAVAMEM" CombineGVCFs -O $JOINTNAME.comb$VCFOUTSUFIX -R $REFB $SAMPLELIST --create-output-variant-index || operationfailed
 echo
 
 # Running Genotype GVCFs

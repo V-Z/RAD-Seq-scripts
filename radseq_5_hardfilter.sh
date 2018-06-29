@@ -16,7 +16,7 @@ EXCLUDEPARALOGS='' # Paralogs to exclude
 EXCLUDEPARALOGSB='' # Only file name of paralogs to exclude
 JAVAMEM='' # Memory limit for GATK
 JAVAMEMTEST='^[0-9]+[kmgt]$' # Testing if provided value is a number with k, m, g or t
-GATK='' # Path to directory containing GATK JAR file
+GATK='' # Path to directory containing GATK file
 OUTNAME='' # Base name of the output file
 OUTNAMETEST='^[a-zA-Z0-9_.]+$' # Testing if base name of output file contains only valid characters
 DECNUMTEST='^[0-9]+.?[0-9]*$' # Testing if provided value is decimal number
@@ -38,7 +38,7 @@ while getopts "hrvf:n:a:e:m:g:l:w:" INITARGS; do
 			echo -e "\t-a\tReference FASTA file."
 			echo -e "\t-e\tParalogs to exclude."
 			echo -e "\t-m\tMaximal memory consumption allowed to GATK. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 12g."
-			echo -e "\t-g\tPath to GATK JAR file."
+			echo -e "\t-g\tPath to GATK file."
 			echo -e "\t-l\tMaximum fraction of samples filtered at the genotype level. Provide value from 0 to 1. Default is 0.1."
 			echo -e "\t-w\tMinimal required coverage. Provide an integer. Default is 8."
 			echo -e "\tOutput files will be in same directory as input file (-f)."
@@ -129,13 +129,13 @@ while getopts "hrvf:n:a:e:m:g:l:w:" INITARGS; do
 				exit 1
 				fi
 			;;
-		g) # Path to GATK JAR file
+		g) # Path to GATK file
 			if [ -r "$OPTARG" ]; then
 			GATK="$OPTARG"
-			echo "GATK JAR file: $GATK"
+			echo "GATK file: $GATK"
 			echo
 			else
-				echo "Error! You did not provide path to GATK JAR file (-g) \"$OPTARG\"!"
+				echo "Error! You did not provide path to GATK file (-g) \"$OPTARG\"!"
 				echo
 				exit 1
 				fi
@@ -223,7 +223,7 @@ if [ -z "$JAVAMEM" ]; then
 	fi
 
 if [ -z "$GATK" ]; then
-	echo "Error! Path to GATK JAR file (-g) was not specified!"
+	echo "Error! Path to GATK file (-g) was not specified!"
 	echo "See usage options: \"$0 -h\""
 	echo
 	exit 1

@@ -3,3 +3,7 @@
 **.backup
 **.bak
 
+# Exclude references (keep only FASTA files)
+**.dict*
+**.fasta.*
+

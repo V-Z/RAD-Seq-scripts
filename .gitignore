@@ -7,3 +7,8 @@
 **.dict*
 **.fasta.*
 
+# Ignore all installed R packages
+rpackages/*
+# But include README
+!rpackages/README.md
+

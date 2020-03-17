@@ -20,8 +20,8 @@ import fileinput
 import optparse
 import sys
 
-#  Note that the theoretical maximum for all encodings is 126.
-#  The upper limits below are for "typical" data only.
+# Note that the theoretical maximum for all encodings is 126.
+# The upper limits below are for "typical" data only.
 RANGES = {
     'Sanger': (33, 73),
     'Illumina-1.8': (33, 74),
@@ -29,7 +29,6 @@ RANGES = {
     'Illumina-1.3': (64, 104),
     'Illumina-1.5': (67, 104)
 }
-
 
 def get_qual_range(qual_str):
     """
@@ -40,14 +39,12 @@ def get_qual_range(qual_str):
     vals = [ord(c) for c in qual_str]
     return min(vals), max(vals)
 
-
 def get_encodings_in_range(rmin, rmax, ranges=RANGES):
     valid_encodings = []
     for encoding, (emin, emax) in ranges.items():
         if rmin >= emin and rmax <= emax:
             valid_encodings.append(encoding)
     return valid_encodings
-
 
 def main():
     p = optparse.OptionParser(__doc__)
@@ -108,9 +105,9 @@ def main():
         print("{}\t{}\t{}".format(valid, gmin, gmax),
               file=sys.stderr)
 
-
 if __name__ == "__main__":
     import doctest
     if doctest.testmod(optionflags=doctest.ELLIPSIS |
                        doctest.NORMALIZE_WHITESPACE).failed == 0:
         main()
+

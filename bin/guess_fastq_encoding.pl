@@ -65,38 +65,38 @@ while (my $id = <$z>) {
 	chomp($qual);
 	$cnt++;
 	$cnt>=$limit && last;
- 
+
 	# char to ascii
 	my @chars = split("", $qual);
 	my @nums = sort { $a <=> $b } (map { unpack("C*", $_ )} @chars);
- 
+
 	if ($cnt==1) {
 		($min, $max) = minmax @nums;
 	} else {
 		my ($lmin, $lmax) = minmax @nums; # local values for this read
 		$lmin<$min ? $min=$lmin : $min=$min;
 		$lmax>$max ? $max=$lmax : $max=$max;
+		}
 	}
-}
 
 undef $z;
 
 ## diagnose
 my %diag=(
-			'Sanger'		=> '.',
-			'Solexa'		=> '.',
-			'Illumina 1.3+'	=> '.',
-			'Illumina 1.5+'	=> '.',
-			'Illumina 1.8+'	=> '.',
-			);
+	'Sanger'		=> '.',
+	'Solexa'		=> '.',
+	'Illumina 1.3+'	=> '.',
+	'Illumina 1.5+'	=> '.',
+	'Illumina 1.8+'	=> '.',
+	);
 
 my %comment=(
-			'Sanger'		=> 'Phred+33,  Q[33; 73],  (0, 40)',
-			'Solexa'		=> 'Solexa+64, Q[59; 104], (-5, 40)',
-			'Illumina 1.3+'	=> 'Phred+64,  Q[64; 104], (0, 40)',
-			'Illumina 1.5+'	=> 'Phred+64,  Q[66; 104], (3, 40), with 0=N/A, 1=N/A, 2=Read Segment Quality Control Indicator',
-			'Illumina 1.8+'	=> 'Phred+33,  Q[33; 74],  (0, 41)',
-			);
+	'Sanger'		=> 'Phred+33,  Q[33; 73],  (0, 40)',
+	'Solexa'		=> 'Solexa+64, Q[59; 104], (-5, 40)',
+	'Illumina 1.3+'	=> 'Phred+64,  Q[64; 104], (0, 40)',
+	'Illumina 1.5+'	=> 'Phred+64,  Q[66; 104], (3, 40), with 0=N/A, 1=N/A, 2=Read Segment Quality Control Indicator',
+	'Illumina 1.8+'	=> 'Phred+33,  Q[33; 74],  (0, 41)',
+	);
 
 if ($min<33 || $max>104) { die "Quality values corrupt. found [$min; $max] where [33; 104] was expected\n"; }
 if ($min>=33 && $max<=73)  {$diag{'Sanger'}='x';}
@@ -130,4 +130,5 @@ sub ReadFile {
 		die ("$!: do not recognise file type $infile");
 	}
 	return $FH;
-}
+	}
+

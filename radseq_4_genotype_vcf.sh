@@ -314,7 +314,7 @@ echo "Joining genotyping samples $SAMPLELIST at `date`"
 echo
 # Running Genotype GVCFs
 # NB check that (i) -Xmx has cpus-per-task*mem-per-cpu (e.g. 16*3=48) and (ii) -nt = cpus-per-task
-$JAVA -Xmx$JAVAMEM -jar $GATK -T GenotypeGVCFs -R $REFB $SAMPLELIST -nt $NCPU --includeNonVariantSites -o ../$JOINTNAME$VCFOUTSUFIX || operationfailed
+$JAVA -Xmx$JAVAMEM -jar $GATK -T GenotypeGVCFs -R $REFB $SAMPLELIST -nt $NCPU -o ../$JOINTNAME$VCFOUTSUFIX || operationfailed
 echo
 cd $STARTDIR
 

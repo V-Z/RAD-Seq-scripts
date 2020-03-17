@@ -44,7 +44,7 @@ while getopts "hrvf:c:o:a:j:m:p:g:" INITARGS; do
 			;;
 		r) # References to cite and exit
 			echo "Software to cite:"
-			echo "* BWA, http://bio-bwa.sourceforge.net/"
+			echo "* BWA, http://bio-bwa-0.7.3a.sourceforge.net/"
 			echo "* GATK, https://software.broadinstitute.org/gatk/"
 			echo "* GNU Parallel, https://www.gnu.org/software/parallel/"
 			echo "* Java, https://java.com/"
@@ -172,7 +172,7 @@ function toolcheck {
 		}
 	}
 
-toolcheck bwa
+toolcheck bwa-0.7.3a
 toolcheck parallel
 toolcheck samtools
 
@@ -260,15 +260,15 @@ find $OUTDIR -name "*trm_R1*" -print | parallel -j $NCPU "cp $REF* '{//}'/ && cp
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo
 echo "Starting mapping of paired reads at `date`"
-find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
+find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
 echo
 
 echo "Starting mapping of orphaned reads (R1) at `date`"
-find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
 echo
 
 echo "Starting mapping of orphaned reads (R2) at `date`"
-find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at `date`"
 echo

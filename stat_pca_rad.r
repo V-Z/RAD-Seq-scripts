@@ -2,15 +2,15 @@
 # Install packages
 # install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP", "memuse", "pinfsc50", "tidyr"), lib="rpkgs", repos="https://mirrors.nic.cz/R/", dependencies=TRUE)
 # Libraries
-library(package=stringi, lib.loc="rpkgs")
-library(package=ade4, lib.loc="rpkgs")
-library(package=adegenet, lib.loc="rpkgs")
-library(package=adegraphics, lib.loc="rpkgs")
-library(package=vcfR, lib.loc="rpkgs")
-library(package=ape, lib.loc="rpkgs")
-library(package=pegas, lib.loc="rpkgs")
-library(package=StAMPP, lib.loc="rpkgs")
-library(package=memuse, lib.loc="rpkgs")
+library(package=stringi)
+library(package=ade4)
+library(package=adegenet)
+library(package=adegraphics)
+library(package=vcfR)
+library(package=ape)
+library(package=pegas)
+library(package=StAMPP)
+library(package=memuse)
 
 ## Input file
 vcf.file <- Sys.getenv("VCFR")
@@ -169,15 +169,15 @@ boxplot(vcf.dp, las=3, col=c("#C0C0C0", "#808080"), ylab="Read Depth (DP)", las=
 abline(h=mean(x=as.numeric(vcf.dp), na.rm=TRUE), col="red")
 dev.off()
 
-# N missing SNPs per sample
-write.table(x=summary(t(as.matrix(rad.genlight)))[7,], file="missing_per_sample.txt", sep="\t")
-
 ## Convert to genlight
 rad.genlight <- vcfR2genlight.tetra(x=vcf.data, n.cores=2)
 pop(rad.genlight) <- substr(indNames(rad.genlight), start=1, stop=4) # Add pop names: here beginning of individuals names
 # See names
 indNames(rad.genlight)
 pop(rad.genlight)
+
+# N missing SNPs per sample
+write.table(x=summary(t(as.matrix(rad.genlight)))[7,], file="missing_per_sample.txt", sep="\t")
 
 ## PCA
 rad.pca <- glPcaFast(rad.genlight, nf=5)

@@ -24,10 +24,11 @@ DECNUMTEST='^[0-9]+.?[0-9]*$' # Testing if provided value is decimal number
 MAXFRACTFILTGENOT='' # Maximum fraction of samples filtered at the genotype level
 NUMTEST='^[0-9]+$' # Testing if provided value is an integer
 GENOTFILTDP='' # Genotype filtering level
+MINDPANCOV='' # Minimal average coverage for each called allele
 echo
 
 # Parse initial arguments
-while getopts "hrvf:n:a:e:j:m:g:l:w:" INITARGS; do
+while getopts "hrvf:n:a:e:j:m:g:l:w:y:" INITARGS; do
 	case "$INITARGS" in
 		h) # Help and exit
 			echo "Usage options:"
@@ -41,8 +42,9 @@ while getopts "hrvf:n:a:e:j:m:g:l:w:" INITARGS; do
 			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`; GATK requires Oracle Java)."
 			echo -e "\t-m\tMaximal memory consumption allowed to GATK. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 12g."
 			echo -e "\t-g\tPath to GATK JAR file."
-			echo -e "\t-l\tMaximum fraction of samples filtered at the genotype level. Provide value from 0 to 1. Default is 0.1."
-			echo -e "\t-w\tMinimal required coverage. Provide an integer. Default is 8."
+			echo -e "\t-l\tMaximum fraction of samples filtered at the genotype level. Provide value from 0 to 1. Default is 0.5."
+			echo -e "\t-w\tMinimal required coverage. Provide an integer. Default is 4."
+			echo -e "\t-y\tMinimal average coverage for each called allele. Provide an integer. Default is 4."
 			echo -e "\tOutput files will be in same directory as input file (-f)."
 			echo
 			exit
@@ -174,6 +176,17 @@ while getopts "hrvf:n:a:e:j:m:g:l:w:" INITARGS; do
 				exit 1
 				fi
 			;;
+		y) # Minimal average coverage for each called allele
+		if [[ $OPTARG =~ $NUMTEST ]]; then
+		MINDPANCOV="$OPTARG"
+		echo "Minimal average coverage for each called allele: $GENOTFILTDP"
+		echo
+		else
+				echo "Error! You did not provide correct number for minimal average coverage for each called allele (-y) \"$OPTARG\"!"
+				echo
+				exit 1
+				fi
+		;;
 		*)
 			echo "Error! Unknown option!"
 			echo "See usage options: \"$0 -h\""
@@ -249,15 +262,21 @@ if [ -z "$GATK" ]; then
 	fi
 
 if [ -z "$MAXFRACTFILTGENOT" ]; then
-	echo "Maximum fraction of samples filtered at the genotype level (-l) was not set. Using default value of 0.1."
+	echo "Maximum fraction of samples filtered at the genotype level (-l) was not set. Using default value of 0.5."
 	echo
-	MAXFRACTFILTGENOT='0.1'
+	MAXFRACTFILTGENOT='0.5'
 	fi
 
 if [ -z "$GENOTFILTDP" ]; then
-	echo "Minimal required coverage (-w) was not set. Using default value of 8."
+	echo "Minimal required coverage (-w) was not set. Using default value of 4."
 	echo
-	GENOTFILTDP='8'
+	GENOTFILTDP='4'
+	fi
+
+if [ -z "$MINDPANCOV" ]; then
+	echo "Minimal average coverage for each called allele (-y) was not set. Using default value of 4."
+	echo
+	MINDPANCOV='4'
 	fi
 
 # Exit on error
@@ -295,9 +314,7 @@ echo
 echo "File with extracted non-paralogous SNPs was saved as $VCFFILESNP"
 echo
 
-# FIXME Create a filtering criterion
-# GATK 3.5 "QD < 2.0 || MQ < 40.0 || MQRankSum < -12.5"
-# Full best practice "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0"
+# Create a filtering criterion
 echo "Hard filtering SNPs from joint VCF $VCFFILESNP..."
 echo
 $JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNP -o $VCFFILESNPHARD --filterExpression "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0" --filterName "Rad_filter1" || operationfailed
@@ -305,7 +322,7 @@ echo
 echo "Hard filtered SNPs were saved as $VCFFILESNPHARD"
 echo
 
-# Extract SNPs (both bi- and multiallelic) passing the AA_filter1 criterion
+# Extract SNPs (both bi- and multiallelic) passing the Rad_filter1 criterion
 echo "Extracting only passing SNPs from joint VCF $VCFFILESNPHARD..."
 echo
 $JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V $VCFFILESNPHARD -o $VCFFILESNPPASS --excludeFiltered || operationfailed
@@ -321,20 +338,28 @@ echo
 echo "Biallelic SNPs were saved as $VCFFILESNPBIAL"
 echo
 
-# FIXME Set the filtering
+# Set the filtering for required minimal DP
 echo "Marking filtered sites in the joint VCF $VCFFILESNPBIAL..."
 echo
 $JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V $VCFFILESNPBIAL -o ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz --genotypeFilterExpression "DP < $GENOTFILTDP" --genotypeFilterName DP-$GENOTFILTDP --setFilteredGtToNocall || operationfailed
 echo
-echo "Marked filtered sites were saved as $VCFFILESNPBIAL.dp$GENOTFILTDP.vcf.gz"
+echo "Marked filtered sites were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz"
 echo
 
-# FIXME Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
+# Set the filtering for required minimal average coverage for each called allele
+echo "Checking if each allele that is called is covered by at least $MINDPANCOV reads on average"
+echo
+$JAVA -Xmx$JAVAMEM -jar $GATK -T VariantFiltration -R $REFB -V ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.dpan$MINDPANCOV.vcf.gz --filterExpression "DP / AN < $MINDPANCOV" --filterName DP-AN-$MINDPANCOV || operationfailed
+echo
+echo "Marked filtered sites were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.dpan$MINDPANCOV.vcf.gz"
+echo
+
+# Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
 echo "Selecting variants based on presence in $GENOTFILTDP of indivs in ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz joint VCF..."
 echo
-$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz -o $VCFFILESNPBIAL.dp$GENOTFILTDP.percmiss$MAXFRACTFILTGENOT.vcf.gz --maxNOCALLfraction $MAXFRACTFILTGENOT || operationfailed # --maxFractionFilteredGenotypes $MAXFRACTFILTGENOT
+$JAVA -Xmx$JAVAMEM -jar $GATK -T SelectVariants -R $REFB -V ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.dpan$MINDPANCOV.vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.dpan$MINDPANCOV.percmiss$MAXFRACTFILTGENOT.vcf.gz --maxNOCALLfraction $MAXFRACTFILTGENOT || operationfailed
 echo
-echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.percmiss$MAXFRACTFILTGENOT.vcf.gz"
+echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.dpan$MINDPANCOV.percmiss$MAXFRACTFILTGENOT.vcf.gz"
 echo
 
 echo "All output files are in directory \"$VCFDIR\" and names start with \"$OUTNAME*\""
@@ -347,7 +372,7 @@ echo
 
 # Statistics
 echo "Statistics of SNPs in VCF files using bcftools"
-ls -1 *.vcf.gz | parallel -j 2 "echo '{/}' && bcftools stats -s - '{}' > '{.}'.stats.txt || operationfailed"
+ls -1 $VCFDIR/*.vcf.gz | parallel -j 2 "echo '{/}' && bcftools stats -s - '{}' > '{.}'.stats.txt || operationfailed"
 echo
 
 # PCA and more statistics using R script
@@ -357,8 +382,10 @@ mkdir rstats
 
 # Do the calculations
 echo "Calculating statistics, PCAs and distances using R"
-for VCFGZ in `ls -1 *.vcf.gz`; do
+echo
+for VCFGZ in ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.dpan$MINDPANCOV.percmiss$MAXFRACTFILTGENOT.vcf.gz ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.dpan$MINDPANCOV.vcf.gz ${VCFFILESNPBIAL%.vcf.gz}.dp$GENOTFILTDP.vcf.gz $VCFFILESNPBIAL $VCFFILESNPPASS $VCFFILESNPHARD $VCFFILESNP; do
 	echo "Processing $VCFGZ"
+	echo
 	# Create output directory
 	mkdir rstats/$VCFGZ || operationfailed
 	# Go to output directory

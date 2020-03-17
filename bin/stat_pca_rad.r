@@ -2,15 +2,15 @@
 # Install packages
 # install.packages(pkgs=c("stringi", "ade4", "adegenet", "adegraphics", "vcfR", "ape", "pegas", "StAMPP", "memuse", "pinfsc50", "tidyr"), lib="rpkgs", repos="https://mirrors.nic.cz/R/", dependencies=TRUE)
 # Libraries
-library(package=stringi)
-library(package=ade4)
-library(package=adegenet)
-library(package=adegraphics)
-library(package=vcfR)
-library(package=ape)
-library(package=pegas)
-library(package=StAMPP)
-library(package=memuse)
+library(package=stringi, lib.loc="rpkgs")
+library(package=ade4, lib.loc="rpkgs")
+library(package=adegenet, lib.loc="rpkgs")
+library(package=adegraphics, lib.loc="rpkgs")
+library(package=vcfR, lib.loc="rpkgs")
+library(package=ape, lib.loc="rpkgs")
+library(package=pegas, lib.loc="rpkgs")
+library(package=StAMPP, lib.loc="rpkgs")
+library(package=memuse, lib.loc="rpkgs")
 
 ## Input file
 vcf.file <- Sys.getenv("VCFR")
@@ -176,27 +176,27 @@ pop(rad.genlight) <- substr(indNames(rad.genlight), start=1, stop=4) # Add pop n
 indNames(rad.genlight)
 pop(rad.genlight)
 
-# N missing SNPs per sample
+## N missing SNPs per sample
 write.table(x=summary(t(as.matrix(rad.genlight)))[7,], file="missing_per_sample.txt", sep="\t")
 
 ## PCA
 rad.pca <- glPcaFast(rad.genlight, nf=5)
 
 # Save nice figs
-pdf("PCA_all_SNPs_ax12.pdf", width=14, height=7)
+pdf("pcoa_ax12.pdf", width=14, height=7)
 g1 <- s.class(rad.pca$scores, pop(rad.genlight),  xax=1, yax=2, col=transp("blue", 0.6), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=TRUE, pgrid.draw=FALSE, plot=FALSE)
 g2 <- s.label(rad.pca$scores, xax=1, yax=2, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=TRUE, pgrid.draw=FALSE, plabels.cex=1, plot=FALSE)
 ADEgS(c(g1, g2), layout=c(1, 2))
 dev.off()
 
-pdf("PCA_all_SNPs_ax13.pdf", width=14, height=7)
+pdf("pcoa_ax13.pdf", width=14, height=7)
 g1 <- s.class(rad.pca$scores, pop(rad.genlight),  xax=1, yax=3, col=transp("blue", 0.6), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=TRUE, pgrid.draw=FALSE, plot=FALSE)
 g2 <- s.label(rad.pca$scores, xax=1, yax=3, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=TRUE, pgrid.draw=FALSE, plabels.cex=1, plot=FALSE)
 ADEgS(c(g1, g2), layout=c(1, 2))
 dev.off()
 
 # Ploidy - differentiated plots
-pdf ("PCA_all_ploidycol_SNPs_ax12.pdf", width=14, height=7)
+pdf ("pcoa_ploidycol_ax12.pdf", width=14, height=7)
 g1 <- s.class(rad.pca$scores, as.factor(as.vector(ploidy(rad.genlight))), xax=1, yax=2, col=transp(c("#FF0000", "#0000FF")), ellipseSize=0, starSize=0, ppoints.cex=4, paxes.draw=TRUE, pgrid.draw=FALSE, plab.cex=0, plot=FALSE)
 g2 <- s.label(rad.pca$scores, xax=1, yax=2, ppoints.col="red", plabels=list(box=list(draw=FALSE), optim=TRUE), paxes.draw=TRUE, pgrid.draw=FALSE, plabels.cex=1, plot=FALSE)
 ADEgS(c(g1, g2), layout=c(1, 2))
@@ -208,3 +208,4 @@ rad.d.ind <- stamppNeisD(rad.genlight, pop=FALSE) # Nei's 1972 distance between 
 stamppPhylip(rad.d.ind, file="neis_dist_inds.phy.dst") # Export matrix for SplitsTree
 rad.d.pop <- stamppNeisD(rad.genlight, pop=TRUE) # Nei's 1972 distance between populations
 stamppPhylip(rad.d.pop, file="neis_dist_pops.phy.dst") # Export matrix for SplitsTree
+

@@ -12,7 +12,7 @@ JAVAMEM='' # Memory limit for Picard and GATK
 JAVAMEMTEST='^[0-9]+m$' # Testing if provided value is a number with k, m, g or t
 PICARD='' # Path to directory containing Picard JAR file
 PLATFORM='illumina' # Sequencing platform
-GATK='' # Path to directory containing GATK JAR file
+GATKJ='' # Path to directory containing GATK JAR file
 OUTDIR='' # Output directory
 BAMLIST='' # List of BAM files in each directory
 BAMFILE='' # Currently processed BAM file
@@ -44,7 +44,7 @@ while getopts "hrvf:c:o:a:j:m:p:g:" INITARGS; do
 			;;
 		r) # References to cite and exit
 			echo "Software to cite:"
-			echo "* BWA, http://bio-bwa-0.7.3a.sourceforge.net/"
+			echo "* BWA, http://bio-bwa.sourceforge.net/"
 			echo "* GATK, https://software.broadinstitute.org/gatk/"
 			echo "* GNU Parallel, https://www.gnu.org/software/parallel/"
 			echo "* Java, https://java.com/"
@@ -145,8 +145,8 @@ while getopts "hrvf:c:o:a:j:m:p:g:" INITARGS; do
 			;;
 		g) # Path to GATK JAR file
 			if [ -r "$OPTARG" ]; then
-			GATK="$OPTARG"
-			echo "GATK JAR file: $GATK"
+			GATKJ="$OPTARG"
+			echo "GATK JAR file: $GATKJ"
 			echo
 			else
 				echo "Error! You did not provide path to GATK JAR file (-g) \"$OPTARG\"!"
@@ -172,7 +172,7 @@ function toolcheck {
 		}
 	}
 
-toolcheck bwa-0.7.3a
+toolcheck bwa
 toolcheck parallel
 toolcheck samtools
 
@@ -224,7 +224,7 @@ if [ -z "$PICARD" ]; then
 	exit 1
 	fi
 
-if [ -z "$GATK" ]; then
+if [ -z "$GATKJ" ]; then
 	echo "Error! Path to GATK JAR file (-g) was not specified!"
 	echo "See usage options: \"$0 -h\""
 	echo
@@ -260,15 +260,15 @@ find $OUTDIR -name "*trm_R1*" -print | parallel -j $NCPU "cp $REF* '{//}'/ && cp
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo
 echo "Starting mapping of paired reads at `date`"
-find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
+find $OUTDIR -name "*trm_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{//}'/*trm_R1* '{//}'/*trm_R2* | samtools view -bu | samtools sort -l 9 -o '{= s:trm.+$:paired.bam: =}'" || operationfailed
 echo
 
 echo "Starting mapping of orphaned reads (R1) at `date`"
-find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R1*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R1.bam: =}'" || operationfailed
 echo
 
 echo "Starting mapping of orphaned reads (R2) at `date`"
-find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa-0.7.3a mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
+find $OUTDIR -name "*unp_R2*" -print | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && bwa mem '{//}'/$REFB '{}' | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired_R2.bam: =}'" || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at `date`"
 echo
@@ -294,27 +294,27 @@ for OUTDIRD in `find $OUTDIR -name '*.bam' -printf '%h\n' | sort -u`; do
 	BAMLIST=(*paired.bam)
 	# Process all BAM files
 	for ((BAMF=0; BAMF<${#BAMLIST[@]}; ++BAMF)); do
-		BAMFILE=${BAMLIST[$BAMF]} # AA016ac_paired_run2.bam
-		BAMFILEBASE=`basename ${BAMFILE%_run?_*_paired.bam}` # the file base should be e.g. AA016ac
-		BAMFILERUNBASE=${BAMFILE%.bam} # the run base should be e.g. AA016ac_run2_paired
+		BAMFILE=${BAMLIST[$BAMF]} # E.g. AA016ac_paired_run02.bam
+		BAMFILEBASE=`basename ${BAMFILE%_run??_*_paired.bam}` # the file base should be e.g. AA016ac
+		BAMFILERUNBASE=${BAMFILE%.bam} # the run base should be e.g. AA016ac_run02_paired
 		# Merge all BAM files (should be 3) with the same file base
 		echo "Merging all BAM files"
 		echo
-		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -jar $PICARD MergeSamFiles $(printf 'INPUT=%s ' $BAMFILEBASE*.bam) OUTPUT=$BAMFILEBASE.mergeRun.bam USE_THREADING=true || operationfailed
+		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $PICARD MergeSamFiles $(printf 'INPUT=%s ' $BAMFILEBASE*.bam) OUTPUT=$BAMFILEBASE.mergeRun.bam USE_THREADING=true || operationfailed
 		echo
 		# Extract run number for RGID assignment and add RG info headers
-		RUNNUMBER=`echo $BAMFILERUNBASE | grep -o "run[[:digit:]]"` # Get the run number from AA016ac_run2_paired, e.g. run2
-		RGLB=`basename $OUTDIRD.lib1 | sed 's/_run[[:digit:]]_[dipte]\{3\}//'`
+		RUNNUMBER=`echo $BAMFILERUNBASE | grep -o "run[[:digit:]][[:digit:]]"` # Get the run number from AA016ac_run02_paired, e.g. run02
+		RGLB=`basename $OUTDIRD.lib1 | sed 's/_run[[:digit:]][[:digit:]]_[dipte]\{3\}//'`
 		RGPU=$RUNNUMBER.unit1
-		RGSM=`basename $OUTDIRD | sed 's/_run[[:digit:]]_[dipte]\{3\}//'`
+		RGSM=`basename $OUTDIRD | sed 's/_run[[:digit:]][[:digit:]]_[dipte]\{3\}//'`
 		echo "Modifying read groups"
 		echo
-		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -jar $PICARD AddOrReplaceReadGroups INPUT=$BAMFILEBASE.mergeRun.bam OUTPUT=$BAMFILEBASE.rg.bam RGID=$RUNNUMBER RGLB=$RGLB RGPL=$PLATFORM RGPU=$RGPU RGSM=$RGSM || operationfailed
+		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $PICARD AddOrReplaceReadGroups INPUT=$BAMFILEBASE.mergeRun.bam OUTPUT=$BAMFILEBASE.rg.bam RGID=$RUNNUMBER RGLB=$RGLB RGPL=$PLATFORM RGPU=$RGPU RGSM=$RGSM || operationfailed
 		# Index this BAM
 		echo
 		echo "Indexing the BAM"
 		echo
-		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -jar $PICARD BuildBamIndex INPUT=$BAMFILEBASE.rg.bam || operationfailed
+		$JAVA -Xmx$(($JAVAMEMM * $NCPU))m -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $PICARD BuildBamIndex INPUT=$BAMFILEBASE.rg.bam || operationfailed
 		done
 	# Clean up all those temporary files
 	rm *.mergeRun.bam
@@ -330,12 +330,12 @@ echo
 
 # Diploids
 echo "Processing diploids at `date`"
-find $OUTDIR -name "*.rg.bam" -print | grep 'dip' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -ploidy 2 -o '{.}'.raw.g.vcf.gz" || operationfailed
+find $OUTDIR -name "*.rg.bam" -print | grep 'dip' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $GATKJ -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -ploidy 2 -o '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Tetraploids
 echo
 echo "Processing tetraploids at `date`"
-find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -jar $GATK -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -ploidy 4 -o '{.}'.raw.g.vcf.gz" || operationfailed
+find $OUTDIR -name "*.rg.bam" -print | grep 'tet' | parallel -j $((NCPU-1)) "echo && echo '{}' && echo && $JAVA -Xmx$JAVAMEM -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $GATKJ -R {//}/$REFB -T HaplotypeCaller -I '{}' -ERC GVCF -ploidy 4 -o '{.}'.raw.g.vcf.gz" || operationfailed
 
 # Deleting references in working directories
 echo
@@ -358,3 +358,53 @@ echo "End: `date`"
 echo
 
 exit
+
+tmux new -s rad
+tmux attach-session -t rad
+
+qsub -l walltime=336:0:0 -l select=1:ncpus=2:mem=20gb:scratch_local=400gb -q ibot -I
+
+cd "$SCRATCHDIR"/
+
+module add jdk-8
+cp /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar .
+
+cp -v /storage/praha1/home/gunnera/rad/ref/pseudohap_Camara_90M_10kb.* .
+
+cp -av /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/rad/cardamine_run_02_test/mapped .
+
+cd mapped/
+
+for RG in $(find . -name "*.rg.bam" -print | grep 'dip' | sort); do
+	echo "$RG" >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	echo >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	RGB="$(basename "$RG")"
+	echo "$RGB" >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	echo >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	RGD="$(dirname "$RG")"
+	echo "$RGD" >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	echo >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	cd "$RGD"
+	java -Xmx19g -jar -Djava.io.tmpdir="$SCRATCHDIR"/tmp "$SCRATCHDIR"/GenomeAnalysisTK.jar -R "$SCRATCHDIR"/pseudohap_Camara_90M_10kb.fasta -T HaplotypeCaller -I "$RGB" -ERC GVCF -ploidy 2 -o "${RGB%.rg.bam}".raw.g.vcf.gz >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	echo >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	cd "$SCRATCHDIR"/mapped/
+	done
+
+for RG in $(find . -name "*.rg.bam" -print | grep 'tet' | sort); do
+	echo "$RG" >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	echo >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	RGB="$(basename "$RG")"
+	echo "$RGB" >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	echo >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	RGD="$(dirname "$RG")"
+	echo "$RGD" >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	echo >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	cd "$RGD"
+	java -Xmx19g -jar -Djava.io.tmpdir="$SCRATCHDIR"/tmp "$SCRATCHDIR"/GenomeAnalysisTK.jar -R alygenomes.fasta -T HaplotypeCaller -I "$RGB" -ERC GVCF -ploidy 4 -o "${RGB%.rg.bam}".raw.g.vcf.gz >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	echo >> "$SCRATCHDIR"/mapping_hapcaller.log 2>&1
+	cd "$SCRATCHDIR"/mapped/
+	done
+
+cp -av "$SCRATCHDIR" /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/rad/
+
+ssh draba1 "ps ux; cat /scratch.ssd/gunnera/job_14318809.arien-pro.ics.muni.cz/mapping_hapcaller.log" | less

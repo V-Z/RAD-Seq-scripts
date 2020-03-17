@@ -230,7 +230,7 @@ echo
 # The demultiplexing
 echo "Doing the demultiplexing. This may take longer time..."
 echo
-cut -f 3 $SAMPLESLIST | sort -u | parallel -j $NCPU "echo '{}' && date && $DECOMPRESSER $OUTDIR/{}/*1_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R1.fq' --bol --mismatches 1 && $DECOMPRESSER $OUTDIR/{}/*2_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R2.fq' --bol --mismatches 1 && echo" || operationfailed
+cut -f 3 $SAMPLESLIST | sort -u | parallel -j $((NCPU-1)) "echo '{}' && date && $DECOMPRESSER $OUTDIR/{}/*1_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R1.fq' --bol --mismatches 1 && $DECOMPRESSER $OUTDIR/{}/*2_sequence.$SUFIX | fastx_barcode_splitter.pl --bcfile $OUTDIR/{}/barcodes.tsv --prefix $OUTDIR/{}/demultiplexed/ --suffix '_R2.fq' --bol --mismatches 1 && echo" || operationfailed
 
 # Rename the unmatched files to contain run ID
 echo "Renaming the unmatched files to contain run ID"

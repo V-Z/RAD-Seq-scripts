@@ -18,10 +18,11 @@ GATK='' # Path to directory containing GATK JAR file
 OUTDIR='' # Output directory
 JOINTNAME='' # Base name of the output file
 TEMPDIR='' # Temporal directory for trimming
+INVAR='' # Whether to add also invariant sites
 echo
 
 # Parse initial arguments
-while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
+while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 	case "$INITARGS" in
 		h) # Help and exit
 			echo "Usage options:"
@@ -39,6 +40,7 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
 			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`; GATK requires Oracle Java)."
 			echo -e "\t-m\tMaximal memory consumption allowed to GATK. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 24g."
 			echo -e "\t-g\tPath to GATK JAR file."
+			echo -e "\t-i\tAdd also invariant sites."
 			echo
 			exit
 			;;
@@ -184,6 +186,11 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:" INITARGS; do
 				exit 1
 				fi
 			;;
+		i) # Add also invariant sites
+			INVAR='TRUE'
+			echo "Including also invariant sites."
+			echo
+		;;
 		*)
 			echo "Error! Unknown option!"
 			echo "See usage options: \"$0 -h\""
@@ -314,12 +321,17 @@ echo "Joining genotyping samples $SAMPLELIST at `date`"
 echo
 # Running Genotype GVCFs
 # NB check that (i) -Xmx has cpus-per-task*mem-per-cpu (e.g. 16*3=48) and (ii) -nt = cpus-per-task
-$JAVA -Xmx$JAVAMEM -jar $GATK -T GenotypeGVCFs -R $REFB $SAMPLELIST -nt $NCPU -o ../$JOINTNAME$VCFOUTSUFIX || operationfailed
+if [ "$INVAR" == 'TRUE' ]; then
+	$JAVA -Xmx$JAVAMEM -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $GATK -T GenotypeGVCFs -R $REFB $SAMPLELIST -nt $NCPU -o ../$JOINTNAME$VCFOUTSUFIX --includeNonVariantSites || operationfailed
+	else
+		$JAVA -Xmx$JAVAMEM -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $GATK -T GenotypeGVCFs -R $REFB $SAMPLELIST -nt $NCPU -o ../$JOINTNAME$VCFOUTSUFIX || operationfailed
+		fi
 echo
 cd $STARTDIR
 
 echo "Final cleanup"
 rm -rf $TEMPDIR
+rm -rf $SCRATCHDIR/tmp
 echo
 
 echo "End: `date`"

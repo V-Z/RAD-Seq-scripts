@@ -18,20 +18,33 @@ LIBRARY='cardamine_run_02_test'
 TABLE='samples_demultiplexing_list_cardamine_run_02_test.tsv'
 
 # Change working directory
-cd "$SCRATCHDIR"/ || exit 1
+echo "Going to working directory ${SCRATCHDIR}"
+cd "${SCRATCHDIR}"/ || exit 1
+echo
 
-# Launch it
+# Required modules
+echo "Loading modules"
 module add parallel-20160622 || exit 1
 module add fastx-0.0.14 || exit 1
+echo
 
-# Prepare the task
-cp -a /storage/praha1/home/"$LOGNAME"/rad/1_demultiplexing/* "$SCRATCHDIR"/ || exit 1
-cp -a "$DATADIR"/"$LIBRARY"/0_raw_illumina "$SCRATCHDIR"/ || exit 1
+# Copy data
+echo "Copying..."
+echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/rad/"
+cp -a /storage/praha1/home/"${LOGNAME}"/rad/1_demultiplexing/* "${SCRATCHDIR}"/ || exit 1
+echo "Data to process - ${DATADIR}/${LIBRARY}"
+cp -a "${DATADIR}"/"${LIBRARY}"/0_raw_illumina "${SCRATCHDIR}"/ || exit 1
+echo
 
-./radseq_1_demultiplexing.sh -s "$TABLE" -c 3 -o demultiplexed -f 0_raw_illumina -x fastq.bz2 -u bzcat | tee demultiplexing.log
+# Running the task
+echo "Preprocessing the FASTQ files..."
+./radseq_1_demultiplexing.sh -s "${TABLE}" -c 3 -o demultiplexed -f 0_raw_illumina -x fastq.bz2 -u bzcat | tee demultiplexing.log
+echo
 
 # Copy results back to storage
-cp -a demultiplexed "$DATADIR"/"$LIBRARY"/ || export CLEAN_SCRATCH='false'
+echo "Copying results back to ${DATADIR}/${LIBRARY}"
+cp -a demultiplexed "${DATADIR}"/"${LIBRARY}"/ || export CLEAN_SCRATCH='false'
+echo
 
 exit
 

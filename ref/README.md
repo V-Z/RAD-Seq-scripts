@@ -5,18 +5,18 @@ Processing RAD data require indexed FASTA reference files. See steps below.
 ## Required software
 
 * BWA <https://github.com/lh3/bwa>
-* Picard <https://broadinstitute.github.io/picard/>
-* Samtools <http://www.htslib.org/>
+* Picard <https://github.com/broadinstitute/picard>
+* Samtools <https://github.com/samtools/samtools>
 
 ## Indexing the reference
 
 ```sh
 REF='file' # E.g. 'file.fasta' will be used as reference
 # Create *.dict index
-java -jar picard.jar CreateSequenceDictionary R="$REF".fasta O="$REF".dict
+java -jar picard.jar CreateSequenceDictionary R="${REF}".fasta O="${REF}".dict
 # Create *. fasta.amb, *. fasta.ann, *. fasta.bwt, *.fasta.pac, *.fasta.sa indices
-bwa index "$REF".fasta
+bwa index "${REF}".fasta
 # Create *.fasta.fai index
-samtools faidx "$REF".fasta
+samtools faidx "${REF}".fasta
 ```
 

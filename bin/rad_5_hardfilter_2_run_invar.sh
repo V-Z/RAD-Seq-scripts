@@ -9,8 +9,8 @@ trap 'cp -a $SCRATCHDIR $DATADIR/ && clean_scratch' TERM
 # Prepare the task
 cp -a /storage/praha1/home/$LOGNAME/rad/5_hardfilter/* $SCRATCHDIR/ || exit 1
 cp -a /storage/praha1/home/$LOGNAME/rad/ref/* $SCRATCHDIR/ || exit 1
-# cp -a /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/arabidopsis/joined_vcf/arenosa/*all*vcf.gz* $SCRATCHDIR/ || exit 1
-cp -a /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/arabidopsis/joined_vcf/lyrata/*all*vcf.gz* $SCRATCHDIR/ || exit 1
+# cp -a /auto/pruhonice1-ibot/shared/brassicaceae/joined_vcf/arenosa/*all*vcf.gz* $SCRATCHDIR/ || exit 1
+cp -a /auto/pruhonice1-ibot/shared/brassicaceae/joined_vcf/lyrata/*all*vcf.gz* $SCRATCHDIR/ || exit 1
 
 # Change working directory
 cd $SCRATCHDIR/ || exit 2
@@ -34,7 +34,7 @@ java -Xmx24g -jar $GATK/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.
 java -Xmx24g -jar $GATK/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V lyrata_all.raw.hardfilter.dp50.dpan5.vcf.gz -o lyrata_all.raw.hardfilter.dp50.dpan5.percmiss05.vcf.gz --maxNOCALLfraction 0.5 || exit 1
 
 # Copy results back to storage
-cp -a $SCRATCHDIR /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/arabidopsis/filtered_vcf/ || export CLEAN_SCRATCH=false
+cp -a $SCRATCHDIR /auto/pruhonice1-ibot/shared/brassicaceae/filtered_vcf/ || export CLEAN_SCRATCH=false
 
 # Clean-up of SCRATCH
 if [ "$CLEAN_SCRATCH" != "false" ]; then rm -rf $SCRATCHDIR/*; fi

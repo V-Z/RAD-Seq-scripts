@@ -7,7 +7,7 @@ trap 'clean_scratch' TERM EXIT
 trap 'cp -a $SCRATCHDIR $DATADIR/ && clean_scratch' TERM
 
 # Location of data to be trimmed
-DATADIR='/storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/rad'
+DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad'
 
 # Library to process
 # run_1_2_dip_tet_harvard run_3_4_dip_tet_2017_01_arenosa_lyrata run_5_dip_tet_2017_11_lyrata run_6_7_dip_tet_2018_01_lyrata run_8_dip_tet_arenosa run_9_dip_tet_lyrata run_10_dip_tet_lyrata run_11_dip_tet_arenosa run_12_dip_tet_arenosa_lyrata

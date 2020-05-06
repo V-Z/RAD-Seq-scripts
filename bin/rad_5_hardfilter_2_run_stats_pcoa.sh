@@ -3,8 +3,8 @@
 # qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=48gb:scratch_local=50gb -m abe bin/rad_5_hardfilter_rstats_arabidopsis_cardamine.sh
 
 # Change working directory
-# cd /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/rad_vcf/joined_vcf/arenosa/ || exit 1
-cd /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/rad_vcf/joined_vcf/lyrata/ || exit 1
+# cd /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/arenosa/ || exit 1
+cd /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/lyrata/ || exit 1
 
 # Copy R packages and script
 cp -a /storage/praha1/home/gunnera/arabidopsis/5_hardfilter/rpkgs . || exit 1

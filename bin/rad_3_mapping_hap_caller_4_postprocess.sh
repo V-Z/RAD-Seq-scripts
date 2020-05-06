@@ -16,13 +16,13 @@ cd "$SCRATCHDIR"/ || exit 1
 module add samtools-1.9 || exit 1
 
 # Prepare the task
-cp -a /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/for_stats "$SCRATCHDIR"/ || exit 1
+cp -a /auto/pruhonice1-ibot/shared/brassicaceae/for_stats "$SCRATCHDIR"/ || exit 1
 
 # Calculating the statistics
 find for_stats/ -name "*.rg.bam" -exec echo '{}' >> mapping_stats.txt \; -exec samtools flagstat '{}' >> mapping_stats.txt \; -exec echo >> mapping_stats.txt \;
 
 # Copy results back to storage
-cp mapping_stats.txt /storage/ostrava2-archive/tape_tape/backup/VO_cuni_prf_arab/shared/for_stats/ || export CLEAN_SCRATCH='false'
+cp mapping_stats.txt /auto/pruhonice1-ibot/shared/brassicaceae/for_stats/ || export CLEAN_SCRATCH='false'
 
 exit
 

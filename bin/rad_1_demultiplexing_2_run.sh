@@ -91,7 +91,7 @@ while getopts "hrvs:c:o:f:x:u:d" INITARGS; do
 			;;
 		f) # Input directory with compressed FASTQ files to be processed
 			if [ -d "${OPTARG}" ]; then
-				COUNTFASTQ="$(ls -1 "${OPTARG}"/*."${SUFIX}" 2>/dev/null | wc -l)"
+				COUNTFASTQ="$(find "${OPTARG}" -name "./*.${SUFIX}" 2>/dev/null | wc -l)"
 				if [ "${COUNTFASTQ}" != 0 ]; then
 					FASTQINPUTDIR="${OPTARG}"
 					echo "Input directory: ${FASTQINPUTDIR}"
@@ -237,7 +237,7 @@ echo "Renaming the unmatched files to contain run ID"
 while read -r DEMULTIPLEXEDDIR; do
 	for UNMF in "${OUTDIR}"/"${DEMULTIPLEXEDDIR}"/demultiplexed/unmatched*; do
 		echo -ne "Processing \"${DEMULTIPLEXEDDIR}\" : \"${UNMF}\"\r"
-		mv "${UNMF}" "$(echo "${UNMF}" | sed "s/unmatched/unmatched_${DEMULTIPLEXEDDIR}/")" || operationfailed
+		mv "${UNMF}" "${UNMF//unmatched/unmatched_"${DEMULTIPLEXEDDIR}"}" || operationfailed
 		echo
 		done
 	done < "$(cut -f 3 "${SAMPLESLIST}" | sort -u)"

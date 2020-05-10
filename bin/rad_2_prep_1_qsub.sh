@@ -1,10 +1,18 @@
 #!/bin/bash
 
-# qsub -l walltime=48:0:0 -l select=1:ncpus=4:mem=6gb:scratch_local=300gb -q ibot -m abe ~/bin/rad_2_trimming_arabidopsis_cardamine.sh
+# Author: Vojtěch Zeisek, https://trapa.cz/
+# License: GNU General Public License 3.0, https://www.gnu.org/licenses/gpl-3.0.html
+
+# Process all files in the working directory (named *.R[12].fq[.bz2]) to be ready for mapping and calling haplotypes (trimming, deduplication, statistics, quality checks).
+
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+# qsub -l walltime=24:0:0 -l select=1:ncpus=4:mem=8gb:scratch_local=400gb -q ibot -m abe ~/bin/rad_2_prep_1_qsub.sh
 
 # Clean-up of SCRATCH
 trap 'clean_scratch' TERM EXIT
-trap 'cp -a $SCRATCHDIR $DATADIR/ && clean_scratch' TERM
+trap 'cp -a ${SCRATCHDIR} ${DATADIR}/ && clean_scratch' TERM
 
 # Location of data to be trimmed
 DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad'
@@ -23,34 +31,31 @@ echo "Loading modules"
 module add trimmomatic-0.36 || exit 1
 module add bbmap-38.42 || exit 1
 module add fastQC-0.11.5 || exit 1
-module add parallel-20160622 || exit 1
+module add parallel-20200322 || exit 1
 echo
 
 # Copy data
 echo "Copying..."
-echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/rad/"
-cp -a /storage/praha1/home/"$LOGNAME"/rad/2_trimming/* "$SCRATCHDIR"/ || exit 1
+echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
+cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{adaptors.fa,bin/rad_2_prep_2_run.sh} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process - ${DATADIR}/${LIBRARY}"
-cp -a "$DATADIR"/"$LIBRARY"/1_demultiplexed "$SCRATCHDIR"/ || exit 1
+cp -a "${DATADIR}"/"${LIBRARY}"/1_demultiplexed "${SCRATCHDIR}"/ || exit 1
 echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./hybseq_1_prep_2_run.sh -f 0_data -c 4 -o 1_trimmed -d 2_dedup -q 3_qual_rep -a adaptors.fa -m 4 -t "${TRIMMOMATIC_BIN}" | tee hybseq_prepare.log # HybSeq
-./radseq_2_trimming.sh -f 1_demultiplexed -c 3 -o trimmed -a adaptors.fa -m 5g -t "$TRIMMOMATIC_BIN" | tee trimming.log
+./rad_2_prep_2_run.sh -f 1_demultiplexed -c 4 -o 2_trimmed -d 2_dedup -q 3_qual_rep -a adaptors.fa -m 2 -t "${TRIMMOMATIC_BIN}" | tee radseq_prepare.log
 echo
-
-# Copy results back to storage
-cp -a trimmed trimming.log "$DATADIR"/"$LIBRARY"/ || export CLEAN_SCRATCH='false'
-
-exit
 
 # Remove unneeded file
 echo "Removing unneeded files"
-rm adaptors.fa hybseq_1_prep_2_run.sh
+rm -rf 1_demultiplexed adaptors.fa rad_2_prep_2_run.sh
 echo
 
 # Copy results back to storage
 echo "Copying results back to ${DATADIR}"
-cp -a "${SCRATCHDIR}" "${DATADIR}"/ || export CLEAN_SCRATCH='false'
+cp -a "${SCRATCHDIR}" "${DATADIR}"/"${LIBRARY}"/ || export CLEAN_SCRATCH='false'
 echo
+
+exit
+

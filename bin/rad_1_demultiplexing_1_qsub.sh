@@ -1,10 +1,18 @@
 #!/bin/bash
 
-# qsub -l walltime=24:0:0 -l select=1:ncpus=3:mem=4gb:scratch_local=400gb -q ibot -m abe ~/radseq/bin/rad_1_demultiplexing_1_qsub.sh
+# Author: Vojtěch Zeisek, https://trapa.cz/
+# License: GNU General Public License 3.0, https://www.gnu.org/licenses/gpl-3.0.html
+
+# 
+
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+# qsub -l walltime=24:0:0 -l select=1:ncpus=4:mem=4gb:scratch_local=400gb -q ibot -m abe ~/radseq/bin/rad_1_demultiplexing_1_qsub.sh
 
 # Clean-up of SCRATCH
 trap 'clean_scratch' TERM EXIT
-trap 'cp -a $SCRATCHDIR $DATADIR/ && clean_scratch' TERM
+trap 'cp -a ${SCRATCHDIR} ${DATADIR}/ && clean_scratch' TERM
 
 # Location of data to be demultiplexed
 DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad'
@@ -24,26 +32,31 @@ echo
 
 # Required modules
 echo "Loading modules"
-module add parallel-20160622 || exit 1
+module add parallel-20200322 || exit 1
 module add fastx-0.0.14 || exit 1
 echo
 
 # Copy data
 echo "Copying..."
-echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/rad/"
-cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{bin/rad_1_demultiplexing_2_run.sh,demultiplexing_lists/"${LIBRARY}"} "${SCRATCHDIR}"/ || exit 1
+echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
+cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{bin/rad_1_demultiplexing_2_run.sh,demultiplexing_lists/"${TABLE}"} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process - ${DATADIR}/${LIBRARY}"
 cp -a "${DATADIR}"/"${LIBRARY}"/0_raw_illumina "${SCRATCHDIR}"/ || exit 1
 echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./radseq_1_demultiplexing.sh -s "${TABLE}" -c 3 -o 1_demultiplexed -f 0_raw_illumina -x fastq.bz2 -u bzcat | tee demultiplexing.log
+./rad_1_demultiplexing_2_run.sh -s "${TABLE}" -c 4 -o 1_demultiplexed -f 0_raw_illumina -x fastq.bz2 -u bzcat | tee demultiplexing.log
+echo
+
+# Remove unneeded file
+echo "Removing unneeded files"
+rm rad_1_demultiplexing_2_run.sh "${TABLE}"
 echo
 
 # Copy results back to storage
 echo "Copying results back to ${DATADIR}/${LIBRARY}"
-cp -a 1_demultiplexed "${DATADIR}"/"${LIBRARY}"/ || export CLEAN_SCRATCH='false'
+cp -a "${SCRATCHDIR}" "${DATADIR}"/"${LIBRARY}"/ || export CLEAN_SCRATCH='false'
 echo
 
 exit

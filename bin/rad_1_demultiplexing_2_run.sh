@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Author: Vojtěch Zeisek, https://trapa.cz/
+# License: GNU General Public License 3.0, https://www.gnu.org/licenses/gpl-3.0.html
+
+# 
+
+# See './rad_1_demultiplexing_2_run.sh -h' for help.
+
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
 # Initialize variables to ensure they are empty
 SUFIX='' # Default sufix of compressed FASTQ sequences
 SUFIXTEST='^[a-zA-Z0-9._]+$' # Testing of validity of sufix of FASTQ files
@@ -230,7 +240,7 @@ echo
 # The demultiplexing
 echo "Doing the demultiplexing. This may take longer time..."
 echo
-cut -f 3 "${SAMPLESLIST}" | sort -u | parallel -j $((NCPU-1)) "echo '{}' && date && ${DECOMPRESSER} ${OUTDIR}/{}/*1_sequence.${SUFIX} | fastx_barcode_splitter.pl --bcfile ${OUTDIR}/{}/barcodes.tsv --prefix ${OUTDIR}/{}/demultiplexed/ --suffix '_R1.fq' --bol --mismatches 1 && ${DECOMPRESSER} ${OUTDIR}/{}/*2_sequence.${SUFIX} | fastx_barcode_splitter.pl --bcfile ${OUTDIR}/{}/barcodes.tsv --prefix ${OUTDIR}/{}/demultiplexed/ --suffix '_R2.fq' --bol --mismatches 1 && echo" || operationfailed
+cut -f 3 "${SAMPLESLIST}" | sort -u | parallel -j $((NCPU-1)) "echo '{}' && date && ${DECOMPRESSER} ${OUTDIR}/{}/*1_sequence.${SUFIX} | fastx_barcode_splitter.pl --bcfile ${OUTDIR}/{}/barcodes.tsv --prefix ${OUTDIR}/{}/demultiplexed/ --suffix '.R1.fq' --bol --mismatches 1 && ${DECOMPRESSER} ${OUTDIR}/{}/*2_sequence.${SUFIX} | fastx_barcode_splitter.pl --bcfile ${OUTDIR}/{}/barcodes.tsv --prefix ${OUTDIR}/{}/demultiplexed/ --suffix '.R2.fq' --bol --mismatches 1 && echo" || operationfailed
 
 # Rename the unmatched files to contain run ID
 echo "Renaming the unmatched files to contain run ID"
@@ -245,7 +255,7 @@ echo
 
 # Move files of respective samples into their directories
 echo "Moving of processed files into directories specific for each sample"
-ls -1 "${OUTDIR}"/*/demultiplexed/*R1.fq | grep -v unmatched | sed 's/.\+\///' | sed 's/_R1.fq//' | parallel -j "${NCPU}" "echo '{}' && mkdir ${OUTDIR}/{} && mv ${OUTDIR}/*/demultiplexed/{}* ${OUTDIR}/{}/" || operationfailed
+ls -1 "${OUTDIR}"/*/demultiplexed/*R1.fq | grep -v unmatched | sed 's/.\+\///' | sed 's/\.R1.fq//' | parallel -j "${NCPU}" "echo '{}' && mkdir ${OUTDIR}/{} && mv ${OUTDIR}/*/demultiplexed/{}* ${OUTDIR}/{}/" || operationfailed
 echo
 # Move also unmatched files
 echo "Moving unmatched files"

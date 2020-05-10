@@ -17,9 +17,9 @@ trap 'cp -a ${SCRATCHDIR} ${DATADIR}/ && clean_scratch' TERM
 # Location of data to be trimmed
 DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad'
 # Library to process
-# run_1_2_dip_tet_harvard run_3_4_dip_tet_2017_01_arenosa_lyrata run_5_dip_tet_2017_11_lyrata run_6_7_dip_tet_2018_01_lyrata run_8_dip_tet_arenosa run_9_dip_tet_lyrata run_10_dip_tet_lyrata run_11_dip_tet_arenosa run_12_dip_tet_arenosa_lyrata
+# run_01_02_brian run_01_02_dip_tet_harvard run_03_04_dip_tet_2017_01_arenosa_lyrata run_05_dip_tet_2017_11_lyrata run_06_07_dip_tet_2018_01_lyrata run_2018_06 run_08_dip_tet_2018_08_arenosa run_09_dip_tet_2019_01_lyrata run_10_dip_tet_2019_05_lyrata run_11_dip_tet_2019_06_arenosa run_12_dip_tet_2019_12_arenosa_lyrata
 # cardamine_run_01_test cardamine_run_02_test
-LIBRARY='run_8_dip_tet_arenosa'
+LIBRARY='run_08_dip_tet_2018_08_arenosa'
 
 # Change working directory
 echo "Going to working directory ${SCRATCHDIR}"

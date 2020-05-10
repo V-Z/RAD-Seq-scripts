@@ -93,15 +93,16 @@ while getopts "hrvs:c:o:f:x:u:d" INITARGS; do
 			if [ -d "${OPTARG}" ]; then
 				OUTDIR="${OPTARG}"
 				echo "Output directory: ${OUTDIR}"
-				echo
 				else
-					echo "Output directory ${OUTDIR} doesn't exist - creating it."
+					echo "Output directory ${OUTDIR} doesn't exist - creating '1_demultiplexed'."
+					OUTDIR='1_demultiplexed'
 					mkdir "${OUTDIR}" || { echo "Error! Can't create ${OUTDIR}!"; echo; exit 1; }
 					fi
+				echo
 			;;
 		f) # Input directory with compressed FASTQ files to be processed
 			if [ -d "${OPTARG}" ]; then
-				COUNTFASTQ="$(find "${OPTARG}" -name "./*.${SUFIX}" 2>/dev/null | wc -l)"
+				COUNTFASTQ="$(find "${OPTARG}" -name "*.${SUFIX}" 2>/dev/null | wc -l)"
 				if [ "${COUNTFASTQ}" != 0 ]; then
 					FASTQINPUTDIR="${OPTARG}"
 					echo "Input directory: ${FASTQINPUTDIR}"
@@ -231,11 +232,11 @@ echo
 # Process list of samples to extract bcfiles (names and barcodes) and save them into respective directories
 echo "Creating barcode files"
 
-while read -r FASTQREADGZ; do
+for FASTQREADGZ in $(cut -f 3 ${SAMPLESLIST} | sort -u); do
 	echo "Processing ${FASTQREADGZ}"
 	grep "${FASTQREADGZ}" "${SAMPLESLIST}" | cut -f 1,2 > "${OUTDIR}"/"${FASTQREADGZ}"/barcodes.tsv || operationfailed
-	done < "$(cut -f 3 "${SAMPLESLIST}" | sort -u)"
-echo
+	done
+	echo
 
 # The demultiplexing
 echo "Doing the demultiplexing. This may take longer time..."
@@ -244,13 +245,13 @@ cut -f 3 "${SAMPLESLIST}" | sort -u | parallel -j $((NCPU-1)) "echo '{}' && date
 
 # Rename the unmatched files to contain run ID
 echo "Renaming the unmatched files to contain run ID"
-while read -r DEMULTIPLEXEDDIR; do
+for DEMULTIPLEXEDDIR in $(cut -f 3 ${SAMPLESLIST} | sort -u); do
 	for UNMF in "${OUTDIR}"/"${DEMULTIPLEXEDDIR}"/demultiplexed/unmatched*; do
 		echo -ne "Processing \"${DEMULTIPLEXEDDIR}\" : \"${UNMF}\"\r"
 		mv "${UNMF}" "${UNMF//unmatched/unmatched_"${DEMULTIPLEXEDDIR}"}" || operationfailed
 		echo
 		done
-	done < "$(cut -f 3 "${SAMPLESLIST}" | sort -u)"
+	done
 echo
 
 # Move files of respective samples into their directories

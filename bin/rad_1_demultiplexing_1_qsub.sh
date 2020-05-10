@@ -19,11 +19,11 @@ DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad'
 # Library to process
 # run_03_04_dip_tet_2017_01_arenosa_lyrata run_05_dip_tet_2017_11_lyrata run_06_07_dip_tet_2018_01_lyrata run_08_dip_tet_2018_08_arenosa run_09_dip_tet_2019_01_lyrata run_10_dip_tet_2019_05_lyrata run_11_dip_tet_2019_06_arenosa run_12_dip_tet_2019_12_arenosa_lyrata run_2018_06
 # cardamine_run_01_test cardamine_run_02_test
-LIBRARY='run_03_04_dip_tet_2017_01_arenosa_lyrata'
+LIBRARY='run_11_dip_tet_2019_06_arenosa'
 # Table with demultiplexing key
 # samples_demultiplexing_list_run_03_04_dip_tet_2017_01_arenosa_lyrata.tsv samples_demultiplexing_list_run_05_dip_tet_2017_11_lyrata.tsv samples_demultiplexing_list_run_06_07_dip_tet_2018_01_lyrata.tsv samples_demultiplexing_list_run_08_dip_tet_2018_08_arenosa.tsv samples_demultiplexing_list_run_09_dip_tet_2019_01_lyrata.tsv samples_demultiplexing_list_run_10_dip_tet_2019_05_lyrata.tsv samples_demultiplexing_list_run_11_dip_tet_2019_06_arenosa.tsv samples_demultiplexing_list_run_12_dip_tet_2019_12_arenosa_lyrata.tsv
 # samples_demultiplexing_list_cardamine_run_01_test.tsv samples_demultiplexing_list_cardamine_run_02_test.tsv
-TABLE='samples_demultiplexing_list_run_03_04_dip_tet_2017_01_arenosa_lyrata.tsv'
+TABLE='samples_demultiplexing_list_run_11_dip_tet_2019_06_arenosa.tsv'
 
 # Change working directory
 echo "Going to working directory ${SCRATCHDIR}"
@@ -46,12 +46,12 @@ echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./rad_1_demultiplexing_2_run.sh -s "${TABLE}" -c 4 -o 1_demultiplexed -f 0_raw_illumina -x fastq.bz2 -u bzcat | tee demultiplexing.log
+./rad_1_demultiplexing_2_run.sh -s "${TABLE}" -c 4 -o 1_demultiplexed -x txt.bz2 -f 0_raw_illumina -u bzcat | tee demultiplexing.log
 echo
 
 # Remove unneeded file
 echo "Removing unneeded files"
-rm rad_1_demultiplexing_2_run.sh "${TABLE}"
+rm -rf 0_raw_illumina rad_1_demultiplexing_2_run.sh "${TABLE}"
 echo
 
 # Copy results back to storage

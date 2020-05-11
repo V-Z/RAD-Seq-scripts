@@ -265,7 +265,7 @@ echo
 
 # Compress all FASTQ files
 echo "Compressing FASTQ files"
-find "${OUTDIR}"/ -name "*.fq" -print | parallel -j "${NCPU}" "bzip2 -v -9 '{}'" || operationfailed
+find "${OUTDIR}"/ -name "*.f*q*" -print | parallel -j "${NCPU}" "bzip2 -v -9 '{}'" || operationfailed
 echo
 
 # Cleanup of temporal files

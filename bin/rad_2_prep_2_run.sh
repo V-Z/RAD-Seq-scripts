@@ -362,6 +362,7 @@ echo
 # Compress output files with bzip2
 echo "Compressing output files at $(date)"
 find "${TRIMDIR}"/ -name "*.f*q" -print | parallel -j "${NCPU}" "bzip2 -v9 '{}'" || operationfailed
+find "${DEDUPDIR}"/ -name "*.f*q" -print | parallel -j "${NCPU}" "bzip2 -v9 '{}'" || operationfailed
 echo
 
 echo "End: $(date)"

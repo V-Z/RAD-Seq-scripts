@@ -53,8 +53,8 @@ while getopts "hrvf:a:j:m:p:g:" INITARGS; do
 		f) # Input directory with compressed FASTQ files to be processed
 			for F in "${OPTARG}"*; do
 				if [ -e "${F}" ]; then
-					FQDIR="${OPTARG}" || echo "files do not exist"
-					echo "FASTQ base name: ${FQDIR}"
+					FQ="${OPTARG}" || echo "files do not exist"
+					echo "FASTQ base name: ${FQ}"
 					break
 					else
 						echo "Error! You did not provide path to input directory with FASTQ files named '*.f*q*' (-f) \"${OPTARG}\"!"
@@ -138,7 +138,7 @@ toolcheck bwa
 toolcheck samtools
 
 # Checking if all required parameters are provided
-if [ -z "${FQDIR}" ]; then
+if [ -z "${FQ}" ]; then
 	echo "Error! Input directory with FASTQ files (-f) was not specified!"
 	echo "See usage options: \"${0} -h\""
 	echo
@@ -201,13 +201,13 @@ echo "Mapping of paired and orphaned reads and postprocessing of output BAM file
 
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo "Starting mapping of paired reads at $(date)"
-{ bwa mem "${REF}" ./*.dedup.R1.f*q* ./*.dedup.R2.f*q* | samtools view -bu | samtools sort -l 9 -o '{= s:dedup.+$:paired.bam: =}'; } || operationfailed
+{ bwa mem "${REF}" ./*.dedup.R1.f*q* ./*.dedup.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".paired.bam; } || operationfailed
 echo
 echo "Starting mapping of orphaned reads (R1) at $(date)"
-{ bwa mem "${REF}" ./*.unp.R1.f*q* | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired.R1.bam: =}'; } || operationfailed
+{ bwa mem "${REF}" ./*.unp.R1.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R1.bam; } || operationfailed
 echo
 echo "Starting mapping of orphaned reads (R2) at $(date)"
-{ bwa mem "${REF}" ./*.unp.R2.f*q* | samtools view -bu | samtools sort -l 9 -o '{= s:unp.+$:unpaired.R2.bam: =}'; } || operationfailed
+{ bwa mem "${REF}" ./*.unp.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R2.bam; } || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at $(date)"
 echo
@@ -228,9 +228,9 @@ for ((BAMF=0; BAMF<${#BAMLIST[@]}; ++BAMF)); do
 	echo
 	# Extract run number for RGID assignment and add RG info headers
 	RUNNUMBER="$(echo "${BAMFILERUNBASE}" | grep -o "run[[:digit:]][[:digit:]]")" # Get the run number from AA016ac_run02_paired, e.g. run02
-	RGLB="$("${FQDIR}".lib1 | sed 's/_run[[:digit:]][[:digit:]]_[dipte]\{3\}//')"
+	RGLB="$("${FQ}".lib1 | sed 's/_run[[:digit:]][[:digit:]]_[dipte]\{3\}//')"
 	RGPU="${RUNNUMBER}".unit1
-	RGSM="$("${FQDIR}" | sed 's/_run[[:digit:]][[:digit:]]_[dipte]\{3\}//')"
+	RGSM="$("${FQ}" | sed 's/_run[[:digit:]][[:digit:]]_[dipte]\{3\}//')"
 	echo "Modifying read groups"
 	echo
 	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" AddOrReplaceReadGroups INPUT="${BAMFILEBASE}".mergeRun.bam OUTPUT="${BAMFILEBASE}".rg.bam RGID="${RUNNUMBER}" RGLB="${RGLB}" RGPL="${PLATFORM}" RGPU="${RGPU}" RGSM="${RGSM}" || operationfailed
@@ -252,9 +252,9 @@ echo
 
 if ls ./*dip*.rg.bam 1> /dev/null 2>&1; then # Diploids
 	echo "Processing diploid at $(date)"
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I ./*dip*.rg.bam -ERC GVCF -ploidy 2 -o "${FQDIR}".raw.g.vcf.gz || operationfailed
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I ./*dip*.rg.bam -ERC GVCF -ploidy 2 -o "${FQ}".raw.g.vcf.gz || operationfailed
 	elif ls ./*tet*.rg.bam 1> /dev/null 2>&1; then # Tetraploids
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I ./*tet*.rg.bam -ERC GVCF -ploidy 4 -o "${FQDIR}".raw.g.vcf.gz || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I ./*tet*.rg.bam -ERC GVCF -ploidy 4 -o "${FQ}".raw.g.vcf.gz || operationfailed
 		else
 			echo "The name of the sample does not allow to find out if it is diploid or tetraploid!"
 			echo
@@ -263,7 +263,7 @@ if ls ./*dip*.rg.bam 1> /dev/null 2>&1; then # Diploids
 
 # Calculating depth of coverage
 echo "Calculating statistics of depth of coverage - it will be in file mapping_stats.txt"
-{ echo "${FQDIR}"
+{ echo "${FQ}"
 	echo
 	echo "Mapped paired reads"
 	echo
@@ -273,7 +273,7 @@ echo "Calculating statistics of depth of coverage - it will be in file mapping_s
 	echo
 	samtools flagstat ./*.rg.bam
 	echo
-	} > mapping_stats."${FQDIR}".txt || operationfailed
+	} > mapping_stats."${FQ}".txt || operationfailed
 echo
 
 echo "End: $(date)"

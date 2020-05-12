@@ -51,22 +51,15 @@ while getopts "hrvf:a:j:m:p:g:" INITARGS; do
 			exit
 			;;
 		f) # Input directory with compressed FASTQ files to be processed
-			if [ -d "${OPTARG}" ]; then
-				COUNTFASTQ="$(find "${OPTARG}" -name "*.f*q*" 2>/dev/null | wc -l)"
-				if [ "${COUNTFASTQ}" != 0 ]; then
-					FQDIR="${OPTARG}"
-					echo "Input directory: ${FQDIR}"
-					echo
+			for F in "${OPTARG}"*; do
+				if [ -e "${F}" ]; then
+					FQDIR="${OPTARG}" || echo "files do not exist"
+					echo "FASTQ base name: ${FQDIR}"
+					break
 					else
-						echo "Error! Given input directory does not contain any FASTQ files in *.f*q*!"
-						echo
-						exit 1
-						fi
-				else
-					echo "Error! You did not provide path to input directory with FASTQ files (-f) \"${OPTARG}\"!"
-					echo
-					exit 1
+						echo "Error! You did not provide path to input directory with FASTQ files named '*.f*q*' (-f) \"${OPTARG}\"!"
 					fi
+				done
 			;;
 		a) # Reference FASTA file
 			if [ -r "${OPTARG}" ]; then

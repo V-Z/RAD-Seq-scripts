@@ -32,7 +32,7 @@ echo
 for ALN in $(find 3_dedup/ -type d | tail -n+2 | sort); do
 	ALNB="$(basename "${ALN}")"
 	echo "Processing ${ALNB}"
-	qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=16gb:scratch_local=50gb -q ibot -m abe -N RADSeq_mapping_hapcaller."${ALNB}" -v WORKDIR="${WORKDIR}",DATADIR="${DATADIR}",LIBRARY="${LIBRARY}",ALNF="${ALNB}",REF="${REF}" ~/hybseq/bin/rad_3_mapping_hap_caller_2_qsub.sh || exit 1
+	qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=16gb:scratch_local=50gb -q ibot -m abe -N RADSeq_mapping_hapcaller."${ALNB}" -v WORKDIR="${WORKDIR}",DATADIR="${DATADIR}",LIBRARY="${LIBRARY}",ALNF="${ALNB}",REF="${REF}" ~/radseq/bin/rad_3_mapping_hap_caller_2_qsub.sh || exit 1
 	echo
 	done
 

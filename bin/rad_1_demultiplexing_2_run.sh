@@ -211,6 +211,8 @@ function operationfailed {
 	echo
 	echo "See previous message(s) to be able to trace the problem."
 	echo
+	# Do not clean SCRATCHDIR, but copy content back to DATADIR
+	export CLEAN_SCRATCH='false'
 	exit 1
 	}
 
@@ -286,3 +288,4 @@ echo "End: $(date)"
 echo
 
 exit
+

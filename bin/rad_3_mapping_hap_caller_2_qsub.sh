@@ -64,7 +64,7 @@ echo
 
 # Remove unneeded file
 echo "Removing unneeded files"
-rm "${REFB%.*}*" rad_3_mapping_hap_caller_3_run.sh "${ALNF}"*.f*q* || { export CLEAN_SCRATCH='false'; exit 1; }
+rm ${REFB%.*}* rad_3_mapping_hap_caller_3_run.sh "${ALNF}"*.f*q* || { export CLEAN_SCRATCH='false'; exit 1; }
 echo
 
 # Copy results back to storage

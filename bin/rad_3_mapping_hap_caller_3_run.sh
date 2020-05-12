@@ -224,7 +224,7 @@ for ((BAMF=0; BAMF<${#BAMLIST[@]}; ++BAMF)); do
 	# Merge all BAM files (should be 3) with the same file base
 	echo "Merging all BAM files"
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" MergeSamFiles "$(printf 'INPUT=%s ' "${BAMFILEBASE}"*.bam)" OUTPUT="${BAMFILEBASE}".mergeRun.bam USE_THREADING=true || operationfailed
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" MergeSamFiles "$(printf 'INPUT=%s ' ${BAMFILEBASE}*.bam)" OUTPUT="${BAMFILEBASE}".mergeRun.bam USE_THREADING=true || operationfailed
 	echo
 	# Extract run number for RGID assignment and add RG info headers
 	RUNNUMBER="$(echo "${BAMFILERUNBASE}" | grep -o "run[[:digit:]][[:digit:]]")" # Get the run number from AA016ac_run02_paired, e.g. run02

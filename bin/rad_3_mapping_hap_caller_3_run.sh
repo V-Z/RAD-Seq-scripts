@@ -4,7 +4,7 @@
 REF='' # Reference sequence
 JAVA='' # PATH to custom Java binary
 JAVAMEM='' # Memory limit for Picard and GATK
-JAVAMEMTEST='^[0-9]+m$' # Testing if provided value is a number with k, m, g or t
+JAVAMEMTEST='^[0-9]+[kmgt]$' # Testing if provided value is a number with k, m, g or t
 PICARD='' # Path to directory containing Picard JAR file
 PLATFORM='illumina' # Sequencing platform
 GATKJ='' # Path to directory containing GATK JAR file

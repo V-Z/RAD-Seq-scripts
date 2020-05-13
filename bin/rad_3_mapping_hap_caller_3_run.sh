@@ -51,7 +51,7 @@ while getopts "hrvf:a:j:m:p:g:" INITARGS; do
 			exit
 			;;
 		f) # Input directory with compressed FASTQ files to be processed
-			for F in "${OPTARG}"/*; do
+			for F in "${OPTARG}"*; do
 				if [ -e "${F}" ]; then
 					FQ="${OPTARG}"
 					echo "FASTQ files base name: ${FQ}"

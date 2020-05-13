@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Author: Vojtěch Zeisek, https://trapa.cz/
+# License: GNU General Public License 3.0, https://www.gnu.org/licenses/gpl-3.0.html
+
+# 
+
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
 # Set data directories
 WORKDIR="/storage/praha1/home/${LOGNAME}/radseq"
 
@@ -32,7 +40,7 @@ echo
 for ALN in $(find 3_dedup/ -type d | tail -n+2 | sort); do
 	ALNB="$(basename "${ALN}")"
 	echo "Processing ${ALNB}"
-	qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=16gb:scratch_local=50gb -q ibot -m abe -N RADSeq_mapping_hapcaller."${ALNB}" -v WORKDIR="${WORKDIR}",DATADIR="${DATADIR}",LIBRARY="${LIBRARY}",ALNF="${ALNB}",REF="${REF}" ~/radseq/bin/rad_3_mapping_hap_caller_2_qsub.sh || exit 1
+	qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=16gb:scratch_local=10gb -q ibot -m abe -N RADSeq_mapping_hapcaller."${ALNB}" -v WORKDIR="${WORKDIR}",DATADIR="${DATADIR}",LIBRARY="${LIBRARY}",REF="${REF}",ALNF="${ALNB}" ~/radseq/bin/rad_3_mapping_hap_caller_2_qsub.sh || exit 1
 	echo
 	done
 

@@ -25,10 +25,10 @@ while getopts "hrvf:a:j:m:p:g:" INITARGS; do
 			echo -e "\t-h\tPrint this help and exit."
 			echo -e "\t-r\tPrint references to used software and exit."
 			echo -e "\t-v\tPrint script version and exit."
-			echo -e "\t-f\tInput directory with FASTQ files saved as \"*.f*q*\"."
-			echo -e "\t-a\tReference FASTA file."
-			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`command -v java\`; GATK requires Oracle Java)."
-			echo -e "\t-m\tMaximal memory consumption allowed to Picard and GATK in MB per one CPU thread. Input as common for 'jar -Xmx', e.g. 12000m for '-Xmx12000m'. Default is 2000m. Warning! This value will be multiplied by number of CPU threads (-c)."
+			echo -e "\t-f\tInput directory with FASTQ files saved as \"*.f*q*\" (can be compressed). The directory name should be base name of the sequences, e.g. directory named 'AA021aq_run08_dip' should contain FASTQ files named 'AA021aq_run08_dip.*.f*q*'."
+			echo -e "\t-a\tReference FASTA file (must be accompanied by indexes)."
+			echo -e "\t-j\tOptional path to custom Java binary (default is output of '\$(command -v java)'; GATK requires Oracle Java)."
+			echo -e "\t-m\tMaximal memory consumption allowed to Picard and GATK. Input as common for 'jar -Xmx', e.g. 12000m for '-Xmx12000m'. Default is 4000m."
 			echo -e "\t-p\tPath to Picard JAR file."
 			echo -e "\t-g\tPath to GATK JAR file."
 			echo
@@ -51,10 +51,10 @@ while getopts "hrvf:a:j:m:p:g:" INITARGS; do
 			exit
 			;;
 		f) # Input directory with compressed FASTQ files to be processed
-			for F in "${OPTARG}"*; do
+			for F in "${OPTARG}"/*; do
 				if [ -e "${F}" ]; then
-					FQ="${OPTARG}" || echo "files do not exist"
-					echo "FASTQ base name: ${FQ}"
+					FQ="${OPTARG}"
+					echo "FASTQ files base name: ${FQ}"
 					break
 					else
 						echo "Error! You did not provide path to input directory with FASTQ files named '*.f*q*' (-f) \"${OPTARG}\"!"
@@ -63,7 +63,7 @@ while getopts "hrvf:a:j:m:p:g:" INITARGS; do
 			;;
 		a) # Reference FASTA file
 			if [ -r "${OPTARG}" ]; then
-				REF="$(realpath "${OPTARG}")"
+				REF="${OPTARG}"
 				echo "Reference FASTA file: ${REF}"
 				echo
 				else
@@ -86,10 +86,10 @@ while getopts "hrvf:a:j:m:p:g:" INITARGS; do
 		m) # Maximal Java memory consumption
 			if [[ ${OPTARG} =~ ${JAVAMEMTEST} ]]; then
 			JAVAMEM="${OPTARG}"
-			echo "Maximal memory consumption by Java (Picard, GATK) in MB: ${JAVAMEM}"
+			echo "Maximal memory consumption by Java (Picard, GATK): ${JAVAMEM}"
 			echo
 			else
-				echo "Error! You did not provide correct maximal memory consumption in MB (-m), e.g. 8000m or 6000m, \"${OPTARG}\"!"
+				echo "Error! You did not provide correct maximal memory consumption (-m), e.g. 8000m or 6000m, \"${OPTARG}\"!"
 				echo
 				exit 1
 				fi
@@ -153,15 +153,15 @@ if [ -z "${REF}" ]; then
 	fi
 
 if [ -z "${JAVA}" ]; then
-	toolcheck java
-	echo "Path to custom Java executable (-j) was not specified. Using default 'command -v java'"
 	JAVA="$(command -v java)"
+	echo "Path to custom Java executable (-j) was not specified. Using default 'command -v java'"
 	echo
+	toolcheck java
 	fi
 
 if [ -z "${JAVAMEM}" ]; then
-	echo "Java memory consumption for Picard and GATK (-m) was not set. Using default value of 2000m."
-	JAVAMEM='2000m'
+	echo "Java memory consumption for Picard and GATK (-m) was not set. Using default value of 4000m."
+	JAVAMEM='4000m'
 	echo
 	fi
 
@@ -201,13 +201,13 @@ echo "Mapping of paired and orphaned reads and postprocessing of output BAM file
 
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo "Starting mapping of paired reads at $(date)"
-{ bwa mem "${REF}" ./*.dedup.R1.f*q* ./*.dedup.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".paired.bam; } || operationfailed
+{ bwa mem "${REF}" "${FQ}".dedup.R1.f*q* "${FQ}".dedup.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".paired.bam; } || operationfailed
 echo
 echo "Starting mapping of orphaned reads (R1) at $(date)"
-{ bwa mem "${REF}" ./*.unp.R1.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R1.bam; } || operationfailed
+{ bwa mem "${REF}" "${FQ}".unp.R1.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R1.bam; } || operationfailed
 echo
 echo "Starting mapping of orphaned reads (R2) at $(date)"
-{ bwa mem "${REF}" ./*.unp.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R2.bam; } || operationfailed
+{ bwa mem "${REF}" "${FQ}".unp.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R2.bam; } || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at $(date)"
 echo
@@ -215,33 +215,26 @@ echo
 echo "Merging paired and unpaired BAM files, adding RG headers"
 # First, merge the PE and SE files for each run and add the read group headers to each file
 # Required headers are RGID, RGLB, RGPL, RGSM
-BAMLIST=(*paired.bam)
-# Process all BAM files
-for ((BAMF=0; BAMF<${#BAMLIST[@]}; ++BAMF)); do
-	BAMFILE=${BAMLIST[${BAMF}]} # E.g. AA016ac_paired_run02.bam
-	BAMFILEBASE="$(basename "${BAMFILE%_run??_*_paired.bam}")" # the file base should be e.g. AA016ac
-	BAMFILERUNBASE="${BAMFILE%.bam}" # the run base should be e.g. AA016ac_run02_paired
-	# Merge all BAM files (should be 3) with the same file base
-	echo "Merging all BAM files"
-	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" MergeSamFiles "$(printf 'INPUT=%s ' ${BAMFILEBASE}*.bam)" OUTPUT="${BAMFILEBASE}".mergeRun.bam USE_THREADING=true || operationfailed
-	echo
-	# Extract run number for RGID assignment and add RG info headers
-	RUNNUMBER="$(echo "${BAMFILERUNBASE}" | grep -o "run[[:digit:]][[:digit:]]")" # Get the run number from AA016ac_run02_paired, e.g. run02
-	RGLB="$("${FQ}".lib1 | sed 's/_run[[:digit:]][[:digit:]]_[dipte]\{3\}//')"
-	RGPU="${RUNNUMBER}".unit1
-	RGSM="$("${FQ}" | sed 's/_run[[:digit:]][[:digit:]]_[dipte]\{3\}//')"
-	echo "Modifying read groups"
-	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" AddOrReplaceReadGroups INPUT="${BAMFILEBASE}".mergeRun.bam OUTPUT="${BAMFILEBASE}".rg.bam RGID="${RUNNUMBER}" RGLB="${RGLB}" RGPL="${PLATFORM}" RGPU="${RGPU}" RGSM="${RGSM}" || operationfailed
-	# Index this BAM
-	echo
-	echo "Indexing the BAM"
-	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" BuildBamIndex INPUT="${BAMFILEBASE}".rg.bam || operationfailed
-	done
+# Merge all BAM files (should be 3) with the same file base
+echo "Merging all BAM files"
+echo
+"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" MergeSamFiles $(printf 'INPUT=%s ' ${FQ}*.bam) OUTPUT="${FQ}".merged.bam USE_THREADING=true || operationfailed
+echo
+# Extract run number for RGID assignment and add RG info headers
+RUNNUMBER="$(echo "${FQ}" | grep -o "run[[:digit:]][[:digit:]]")" # Get the run number from AA021al_run08_dip, e.g. run08
+RGLB="${FQ//_run[0-9][0-9]_[dt][ie][pt]/.lib1}"
+RGPU="${RUNNUMBER}".unit1
+RGSM="${FQ//_run[0-9][0-9]_[dt][ie][pt]/}"
+echo "Modifying read groups"
+echo
+"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" AddOrReplaceReadGroups INPUT="${FQ}".merged.bam OUTPUT="${FQ}".rg.bam RGID="${RUNNUMBER}" RGLB="${RGLB}" RGPL="${PLATFORM}" RGPU="${RGPU}" RGSM="${RGSM}" || operationfailed
+# Index this BAM
+echo
+echo "Indexing the BAM"
+echo
+"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${PICARD}" BuildBamIndex INPUT="${FQ}".rg.bam || operationfailed
 # Clean up all those temporary files
-rm ./*.mergeRun.bam
+rm "${FQ}".merged.bam
 echo
 echo "Mapping ended at $(date)"
 echo
@@ -252,14 +245,16 @@ echo
 
 if ls ./*dip*.rg.bam 1> /dev/null 2>&1; then # Diploids
 	echo "Processing diploid at $(date)"
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I ./*dip*.rg.bam -ERC GVCF -ploidy 2 -o "${FQ}".raw.g.vcf.gz || operationfailed
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I "${FQ}".rg.bam -ERC GVCF -ploidy 2 -o "${FQ}".raw.g.vcf.gz || operationfailed
 	elif ls ./*tet*.rg.bam 1> /dev/null 2>&1; then # Tetraploids
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I ./*tet*.rg.bam -ERC GVCF -ploidy 4 -o "${FQ}".raw.g.vcf.gz || operationfailed
+		echo "Processing tetraploid at $(date)"
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I "${FQ}".rg.bam -ERC GVCF -ploidy 4 -o "${FQ}".raw.g.vcf.gz || operationfailed
 		else
 			echo "The name of the sample does not allow to find out if it is diploid or tetraploid!"
 			echo
 			operationfailed
 	fi
+echo
 
 # Calculating depth of coverage
 echo "Calculating statistics of depth of coverage - it will be in file mapping_stats.txt"
@@ -267,11 +262,11 @@ echo "Calculating statistics of depth of coverage - it will be in file mapping_s
 	echo
 	echo "Mapped paired reads"
 	echo
-	samtools flagstat ./*_paired.bam
+	samtools flagstat "${FQ}".paired.bam
 	echo
 	echo "Read groups"
 	echo
-	samtools flagstat ./*.rg.bam
+	samtools flagstat "${FQ}".rg.bam
 	echo
 	} > mapping_stats."${FQ}".txt || operationfailed
 echo

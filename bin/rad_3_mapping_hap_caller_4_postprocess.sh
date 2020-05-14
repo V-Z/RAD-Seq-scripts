@@ -30,6 +30,7 @@ echo
 
 # Mapping statistics
 echo "Initializing files with statistics"
+echo
 printf "Sample name\tNumber of QC passed reads\tNumber of mapped reads\n" > mapping_stats.tsv || operationfailed
 for MS in mapping_stats.*.txt; do
 	echo "Processing ${MS}"

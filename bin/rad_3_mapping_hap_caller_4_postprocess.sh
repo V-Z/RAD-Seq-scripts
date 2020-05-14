@@ -39,16 +39,19 @@ for MS in mapping_stats.*.txt; do
 		printf '\n'
 		} >> mapping_stats.tsv || operationfailed
 	done
+echo
 
 # Sorting into subdirectories according to samples names
 # Creating directories
 echo "Creating directories according to sample names"
-mkdir "$(find . -name "mapping_hap_caller.*" | sed 's/^\.\/mapping_hap_caller\.//' | sed 's/\.log$//' | tr "\n" " ")" || operationfailed
+mkdir $(find . -name "mapping_hap_caller.*" | sed 's/^\.\/mapping_hap_caller\.//' | sed 's/\.log$//' | tr "\n" " ") || operationfailed
 echo
 # Moving files into respective directories
 for D in $(find . -name "mapping_hap_caller.*" | sed 's/^\.\/mapping_hap_caller\.//' | sed 's/\.log$//'); do
+	echo "Processing ${D}"
 	mv "${D}"*.{raw.g.vcf.gz,raw.g.vcf.gz.tbi,bai,bam} mapping_hap_caller."${D}".log RADSeq_mapping_hapcaller."${D}".* "${D}"/
 	done
+echo
 
 exit
 

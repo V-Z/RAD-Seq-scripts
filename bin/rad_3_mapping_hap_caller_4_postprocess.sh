@@ -49,7 +49,7 @@ echo
 # Moving files into respective directories
 for D in $(find . -name "mapping_hap_caller.*" | sed 's/^\.\/mapping_hap_caller\.//' | sed 's/\.log$//'); do
 	echo "Processing ${D}"
-	mv "${D}"*.{raw.g.vcf.gz,raw.g.vcf.gz.tbi,bai,bam} mapping_hap_caller."${D}".log RADSeq_mapping_hapcaller."${D}".* "${D}"/
+	mv "${D}"*.{raw.g.vcf.gz,raw.g.vcf.gz.tbi,bai,bam} mapping_hap_caller."${D}".log mapping_stats."${D}".txt RADSeq_mapping_hapcaller."${D}".* "${D}"/
 	done
 echo
 

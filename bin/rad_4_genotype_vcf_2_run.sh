@@ -6,7 +6,7 @@ VCFCOMPRESSION='' # Default compression of input VCF files; if any, add "." on t
 VCFOUTSUFIX='' # Default sufix of output VCF file, add "." on the beginning (e.g. ".raw.vcf.gz")
 STRINGTEST='^[a-zA-Z0-9_.]+$' # Testing if provided string contains only valid characters
 VCFDIR='' # Input directory with VCF files
-STARTDIR=$(pwd) # Current working directory
+STARTDIR="$(pwd)" # Current working directory
 NCPU='' # Number of CPU threads for parallel operations
 NCPUTEST='^[0-9]+$' # Testing if provided value is a number
 REF='' # Reference sequence
@@ -23,7 +23,7 @@ echo
 
 # Parse initial arguments
 while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
-	case "$INITARGS" in
+	case "${INITARGS}" in
 		h) # Help and exit
 			echo "Usage options:"
 			echo -e "\t-h\tPrint this help and exit."
@@ -37,7 +37,7 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 			echo -e "\t-o\tOutput directory. It should be empty."
 			echo -e "\t-n\tBase name of output join VCF. Sufix (e.g. \".raw.vcf.gz\") will be added. Allowed characters are letters, numbers, underscore or dot. If not provided, default \"join\" will be used (e.g. \"join.raw.vcf.gz\")."
 			echo -e "\t-a\tReference FASTA file."
-			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`which java\`; GATK requires Oracle Java)."
+			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`command -v java\`; GATK requires Oracle Java)."
 			echo -e "\t-m\tMaximal memory consumption allowed to GATK. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 24g."
 			echo -e "\t-g\tPath to GATK JAR file."
 			echo -e "\t-i\tAdd also invariant sites."
@@ -58,44 +58,44 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 			exit
 			;;
 		w) # Name (sufix) of input VCF files (default is "raw.g.vcf")
-			if [[ $OPTARG =~ $STRINGTEST ]]; then
-				VCFNAME="$OPTARG"
-				echo "Name (sufix) of input VCF files: $VCFNAME"
+			if [[ "${OPTARG}" =~ ${STRINGTEST} ]]; then
+				VCFNAME="${OPTARG}"
+				echo "Name (sufix) of input VCF files: ${VCFNAME}"
 				echo
 				else
-					echo "Error! As name (sufix) of input VCF files (-w) \"$OPTARG\" you did not provide a valid string containing only letters, numbers, dots and underscores (e.g. \"raw.g.vcf\")!"
+					echo "Error! As name (sufix) of input VCF files (-w) \"${OPTARG}\" you did not provide a valid string containing only letters, numbers, dots and underscores (e.g. \"raw.g.vcf\")!"
 					echo
 					exit 1
 					fi
 			;;
 		u) # Compression of input VCF files (default is ".gz")
-			if [[ $OPTARG =~ $STRINGTEST ]]; then
-				VCFCOMPRESSION="$OPTARG"
-				echo "Compression of input VCF files: $VCFCOMPRESSION"
+			if [[ "${OPTARG}" =~ ${STRINGTEST} ]]; then
+				VCFCOMPRESSION="${OPTARG}"
+				echo "Compression of input VCF files: ${VCFCOMPRESSION}"
 				echo
 				else
-					echo "Error! As compression of input VCF files (-u) \"$OPTARG\" you did not provide a valid string containing only letters, numbers, dots and underscores (e.g. \".gz\")!"
+					echo "Error! As compression of input VCF files (-u) \"${OPTARG}\" you did not provide a valid string containing only letters, numbers, dots and underscores (e.g. \".gz\")!"
 					echo
 					exit 1
 					fi
 			;;
 		x) # Sufix of output VCF file (default is ".raw.vcf.gz")
-			if [[ $OPTARG =~ $STRINGTEST ]]; then
-				VCFOUTSUFIX="$OPTARG"
-				echo "Sufix of output VCF file: $VCFOUTSUFIX"
+			if [[ "${OPTARG}" =~ ${STRINGTEST} ]]; then
+				VCFOUTSUFIX="${OPTARG}"
+				echo "Sufix of output VCF file: ${VCFOUTSUFIX}"
 				echo
 				else
-					echo "Error! As sufix of output VCF file (-x) \"$OPTARG\" you did not provide a valid string containing only letters, numbers, dots and underscore (e.g. \".raw.vcf.gz\")!"
+					echo "Error! As sufix of output VCF file (-x) \"${OPTARG}\" you did not provide a valid string containing only letters, numbers, dots and underscore (e.g. \".raw.vcf.gz\")!"
 					echo
 					exit 1
 					fi
 			;;
 		f) # Input directory with compressed VCF files to be processed
-			if [ -d "$OPTARG" ]; then
-				COUNTVCF=`find $OPTARG -name "*.$VCFNAME*" -print 2>/dev/null | wc -l`
-				if [ "$COUNTVCF" != 0 ]; then
-					VCFDIR="$OPTARG"
-					echo "Input directory: $VCFDIR"
+			if [ -d "${OPTARG}" ]; then
+				COUNTVCF=$(find "${OPTARG}" -name "*.${VCFNAME}*" -print 2>/dev/null | wc -l)
+				if [ "${COUNTVCF}" != 0 ]; then
+					VCFDIR="${OPTARG}"
+					echo "Input directory: ${VCFDIR}"
 					echo
 					else
 						echo "Error! Given input directory does not contain any VCF files in *.fq*!"
@@ -103,85 +103,85 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 						exit 1
 						fi
 				else
-					echo "Error! You did not provide path to input directory with VCF files (-f) \"$OPTARG\"!"
+					echo "Error! You did not provide path to input directory with VCF files (-f) \"${OPTARG}\"!"
 					echo
 					exit 1
 					fi
 			;;
 		c) # Number of CPU threads for parallel processing
-			if [[ $OPTARG =~ $NCPUTEST ]]; then
-				NCPU="$OPTARG"
-				echo "Number of CPU threads: $NCPU"
+			if [[ "${OPTARG}" =~ ${NCPUTEST} ]]; then
+				NCPU="${OPTARG}"
+				echo "Number of CPU threads: ${NCPU}"
 				echo
 				else
-					echo "Error! As number of CPU threads (-c) \"$OPTARG\" you did not provide a number!"
+					echo "Error! As number of CPU threads (-c) \"${OPTARG}\" you did not provide a number!"
 					echo
 					exit 1
 					fi
 			;;
 		o) # Output directory
-			if [ -d "$OPTARG" ]; then
-				OUTDIR="$OPTARG"
-				echo "Output directory: $OUTDIR"
+			if [ -d "${OPTARG}" ]; then
+				OUTDIR="${OPTARG}"
+				echo "Output directory: ${OUTDIR}"
 				echo
 				else
-					echo "Error! You did not provide path to output directory (-o) \"$OPTARG\"!"
+					echo "Error! You did not provide path to output directory (-o) \"${OPTARG}\"!"
 					echo
 					exit 1
 					fi
 			;;
 		n) # Base name of the output file
-			if [[ $OPTARG =~ $STRINGTEST ]]; then
-				JOINTNAME="$OPTARG"
-				echo "Name of the output file will be: $JOINTNAME$VCFOUTSUFIX"
+			if [[ "${OPTARG}" =~ ${STRINGTEST} ]]; then
+				JOINTNAME="${OPTARG}"
+				echo "Name of the output file will be: ${JOINTNAME}${VCFOUTSUFIX}"
 				echo
 				else
-					echo "Error! You did not provide valid base name of output joint file (-n) \"$OPTARG\"!"
+					echo "Error! You did not provide valid base name of output joint file (-n) \"${OPTARG}\"!"
 					echo
 					exit 1
 					fi
 			;;
 		a) # Reference FASTA file
-			if [ -r "$OPTARG" ]; then
-				REF="$OPTARG"
-				REFB=$(basename $REF) # Only filename of the reference sequence
-				echo "Reference FASTA file: $REF"
+			if [ -r "${OPTARG}" ]; then
+				REF="${OPTARG}"
+				REFB="$(basename "${REF}")" # Only filename of the reference sequence
+				echo "Reference FASTA file: ${REF}"
 				echo
 				else
-					echo "Error! You did not provide path to reference FASTA file (-a) \"$OPTARG\"!"
+					echo "Error! You did not provide path to reference FASTA file (-a) \"${OPTARG}\"!"
 					echo
 					exit 1
 					fi
 			;;
 		j) # Path to custom Java binary
-			if [ -x "$OPTARG" ]; then
-			JAVA="$OPTARG"
-			echo "Custom Java binary: $JAVA"
+			if [ -x "${OPTARG}" ]; then
+			JAVA="${OPTARG}"
+			echo "Custom Java binary: ${JAVA}"
 			echo
 			else
-				echo "Error! You did not provide path to custom Java binary (-j) \"$OPTARG\"!"
+				echo "Error! You did not provide path to custom Java binary (-j) \"${OPTARG}\"!"
 				echo
 				exit 1
 				fi
 			;;
 		m) # Maximal Java memory consumption
-			if [[ $OPTARG =~ $JAVAMEMTEST ]]; then
-			JAVAMEM="$OPTARG"
-			echo "Maximal memory consumption by Java (GATK): $JAVAMEM"
+			if [[ "${OPTARG}" =~ ${JAVAMEMTEST} ]]; then
+			JAVAMEM="${OPTARG}"
+			echo "Maximal memory consumption by Java (GATK): ${JAVAMEM}"
 			echo
 			else
-				echo "Error! You did not provide correct maximal memory consumption (-m), e.g. 8g or 6000m, \"$OPTARG\"!"
+				echo "Error! You did not provide correct maximal memory consumption (-m), e.g. 8g or 6000m, \"${OPTARG}\"!"
 				echo
 				exit 1
 				fi
 			;;
 		g) # Path to GATK JAR file
-			if [ -r "$OPTARG" ]; then
-			GATK="$OPTARG"
-			echo "GATK JAR file: $GATK"
+			if [ -r "${OPTARG}" ]; then
+			GATK="${OPTARG}"
+			echo "GATK JAR file: ${GATK}"
 			echo
 			else
-				echo "Error! You did not provide path to GATK JAR file (-g) \"$OPTARG\"!"
+				echo "Error! You did not provide path to GATK JAR file (-g) \"${OPTARG}\"!"
 				echo
 				exit 1
 				fi
@@ -193,7 +193,7 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 		;;
 		*)
 			echo "Error! Unknown option!"
-			echo "See usage options: \"$0 -h\""
+			echo "See usage options: \"${0} -h\""
 			echo
 			exit 1
 			;;
@@ -202,83 +202,82 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 
 # Check if all required binaries are available
 function toolcheck {
-	command -v $1 >/dev/null 2>&1 || {
-		echo >&2 "Error! $1 is required but not installed. Aborting. Please, install it."
+	command -v "${1}" >/dev/null 2>&1 || {
+		echo >&2 "Error! ${1} is required but not installed. Aborting. Please, install it."
 		echo
 		exit 1
 		}
 	}
 
-toolcheck basename
 toolcheck parallel
 
 # Checking if all required parameters are provided
-if [ -z "$VCFDIR" ]; then
+if [ -z "${VCFDIR}" ]; then
 	echo "Error! Input directory with VCF files (-f) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
 
-if [ -z "$NCPU" ]; then
+if [ -z "${NCPU}" ]; then
 	echo "Number of CPU threads (-c) for parallel operations was not set. Using default value of 8."
 	echo
 	NCPU='8'
 	fi
 
-if [ -z "$OUTDIR" ]; then
+if [ -z "${OUTDIR}" ]; then
 	echo "Error! Output directory (-o) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
 
-if [ -z "$JOINTNAME" ]; then
+if [ -z "${JOINTNAME}" ]; then
 	echo "Base name of output join VCF (-n) was not set. Using default value \"join\"."
 	echo
 	JOINTNAME='join'
 	fi
 
-if [ -z "$REF" ]; then
+if [ -z "${REF}" ]; then
 	echo "Error! Reference FASTA file (-a) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
 
-if [ -z "$JAVA" ]; then
-	toolcheck java
-	echo "Path to custom Java executable (-j) was not specified. Using default `which java`"
-	JAVA=$(which java)
+if [ -z "${JAVA}" ]; then
+	echo "Path to custom Java executable (-j) was not specified. Using default $(command -v java)"
+	JAVA="$(command -v java)"
 	echo
+	toolcheck java
 	fi
 
-if [ -z "$JAVAMEM" ]; then
+if [ -z "${JAVAMEM}" ]; then
 	echo "Java memory consumption for GATK (-m) was not set. Using default value of 24g."
 	JAVAMEM='24g'
 	echo
 	fi
 
-if [ -z "$GATK" ]; then
+if [ -z "${GATK}" ]; then
 	echo "Error! Path to GATK JAR file (-g) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
 
-if [ -z "$VCFNAME" ]; then
+if [ -z "${VCFNAME}" ]; then
 	echo "Name (sufix) of input VCF files (-w) was not set. Using default 'raw.g.vcf'."
 	VCFNAME='raw.g.vcf'
 	echo
 	fi
 
-if [ -z "$VCFCOMPRESSION" ]; then
+if [ -z "${VCFCOMPRESSION}" ]; then
 	echo "Compression of input VCF files (-u) was not set. Using default '.gz'."
 	VCFCOMPRESSION='.gz'
 	echo
 	fi
 
-if [ -z "$VCFOUTSUFIX" ]; then
+if [ -z "${VCFOUTSUFIX}" ]; then
 	echo "Sufix of output VCF file (-x) was not set. Using default '.raw.vcf.gz'."
 	VCFOUTSUFIX='.raw.vcf.gz'
 	echo
@@ -291,50 +290,55 @@ function operationfailed {
 	echo "See previous message(s) to be able to trace the problem."
 	echo
 	exit 1
+	# Do not clean SCRATCHDIR, but copy content back to DATADIR
+	export CLEAN_SCRATCH='false'
+	exit 1
 	}
 
-echo "Start: `date`"
+echo "Start: $(date)"
 echo
 
 # Make temporal directory
-echo "Making temporal directory in \"`pwd`/$OUTDIR\""
-TEMPDIR=`mktemp -d $OUTDIR/VCFJOINXXXX`
+echo "Making temporal directory in \"$(pwd)/${OUTDIR}\""
+TEMPDIR="$(mktemp -d "${OUTDIR}"/VCFJOINXXXX)"
 echo
 
 # Copy all VCF files to output directory
-echo "Copying all individual VCF files into temporal directory \"`pwd`/$TEMPDIR\""
-find $VCFDIR -name "*.$VCFNAME*" -print | parallel -j $NCPU "cp '{}' $TEMPDIR/" || operationfailed
+echo "Copying all individual VCF files into temporal directory \"$(pwd)/${TEMPDIR}\""
+find "${VCFDIR}" -name "*.${VCFNAME}*" -print | parallel -j "${NCPU}" "cp '{}' ${TEMPDIR}/" || operationfailed
 echo
 
 # Copy reference sequence to temporal directory
 echo "Copying reference sequence to temporal directory"
-cp $REF* $TEMPDIR/ && cp ${REF%.*}.dict $TEMPDIR/ || operationfailed
+cp ${REF%.*}* "${TEMPDIR}"/ || operationfailed
 echo
 
 # Go to output directory with VCF files to be processed
-cd $TEMPDIR
+cd "${TEMPDIR}" || operationfailed
 
 # Create list of VCF files to be processed
-SAMPLELIST=$(ls -1 *.$VCFNAME$VCFCOMPRESSION | sed 's/^/-V /' | sed 's/$/ /' | tr "\n" " ")
+SAMPLELIST=$(find . -name "*.${VCFNAME}${VCFCOMPRESSION}" | sed 's/^\.\///' | sed 's/^/-V /' | tr "\n" " ")
 
-echo "Joining genotyping samples $SAMPLELIST at `date`"
+echo "Joining genotyping samples ${SAMPLELIST} at $(date)"
 echo
 # Running Genotype GVCFs
 # NB check that (i) -Xmx has cpus-per-task*mem-per-cpu (e.g. 16*3=48) and (ii) -nt = cpus-per-task
-if [ "$INVAR" == 'TRUE' ]; then
-	$JAVA -Xmx$JAVAMEM -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $GATK -T GenotypeGVCFs -R $REFB $SAMPLELIST -nt $NCPU -o ../$JOINTNAME$VCFOUTSUFIX --includeNonVariantSites || operationfailed
+if [ "${INVAR}" == 'TRUE' ]; then
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T GenotypeGVCFs -R "${REFB}" "${SAMPLELIST}" -nt "${NCPU}" -o ../"${JOINTNAME}""${VCFOUTSUFIX}" --includeNonVariantSites || operationfailed
 	else
-		$JAVA -Xmx$JAVAMEM -Djava.io.tmpdir=$SCRATCHDIR/tmp -jar $GATK -T GenotypeGVCFs -R $REFB $SAMPLELIST -nt $NCPU -o ../$JOINTNAME$VCFOUTSUFIX || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T GenotypeGVCFs -R "${REFB}" "${SAMPLELIST}" -nt "${NCPU}" -o ../"${JOINTNAME}""${VCFOUTSUFIX}" || operationfailed
 		fi
 echo
-cd $STARTDIR
+
+# Go back to working directory
+cd "${STARTDIR}" || operationfailed
 
 echo "Final cleanup"
-rm -rf $TEMPDIR
-rm -rf $SCRATCHDIR/tmp
+rm -rf "${TEMPDIR}"
 echo
 
-echo "End: `date`"
+echo "End: $(date)"
 echo
 
 exit
+

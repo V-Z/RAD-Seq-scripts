@@ -1,34 +1,76 @@
 #!/bin/bash
 
-# qsub -l walltime=48:0:0 -l select=1:ncpus=6:mem=16gb:scratch_local=100gb -m abe bin/arabidopsis_4_genotype_vcf.sh
+# Author: Vojtěch Zeisek, https://trapa.cz/
+# License: GNU General Public License 3.0, https://www.gnu.org/licenses/gpl-3.0.html
+
+# 
+
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+# qsub -l walltime=48:0:0 -l select=1:ncpus=8:mem=48gb:scratch_local=100gb -m abe bin/arabidopsis_4_genotype_vcf.sh
 
 # Clean-up of SCRATCH
 trap 'clean_scratch' TERM EXIT
-trap 'cp -a $SCRATCHDIR $DATADIR/ && clean_scratch' TERM
+trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
 
-# Prepare the task
-cp -a /storage/praha1/home/$LOGNAME/rad/4_genotype_vcf/* $SCRATCHDIR/ || exit 1
-cp -a /storage/praha1/home/$LOGNAME/rad/ref/* $SCRATCHDIR/ || exit 1
-# cp -a /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/arenosa $SCRATCHDIR/ || exit 1
-cp -a /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/lyrata $SCRATCHDIR/ || exit 1
+# Location of data to be trimmed
+DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/arenosa'
+# DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/lyrata'
+
+# Reference
+# ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta
+REF='ref/arabidopsis/alygenomes.fasta'
+
+# Copy data
+echo "Copying..."
+echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
+cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{${REF%.*}*,bin/rad_4_genotype_vcf_2_run.sh} "${SCRATCHDIR}"/ || exit 1
+echo "Data to process - ${DATADIR}"
+cp -a "${DATADIR}" "${SCRATCHDIR}"/ || exit 1
+echo
+
+# Reference base name
+echo "Obtaining basename of reference file ${REF}"
+REFB="$(basename "${REF}")" || exit 1
+echo
+
+# Data dir base name
+echo "Obtaining basename of data directory ${DATADIR}"
+DATADIRB="$(basename "${DATADIR}")" || exit 1
+echo
 
 # Change working directory
-cd $SCRATCHDIR/ || exit 2
+echo "Going to working directory ${SCRATCHDIR}"
+cd "${SCRATCHDIR}"/ || exit 1
+echo
 
-# Launch it
-module add parallel-20160622
-module add gatk-3.8-0
+# Required modules
+echo "Loading modules"
+module add jdk-8 || exit 1
+module add parallel-20200322 || exit 1
+echo
 
-# ./radseq_4_genotype_vcf.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f arenosa -c 5 -o joined_vcf -n alpine_var -a alygenomes.fasta -j /packages/run/jdk-8/current/bin/java -m 15500m -g $GATK/GenomeAnalysisTK.jar | tee alpine_var_joining_genotype_vcf.log
-# ./radseq_4_genotype_vcf.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f arenosa -c 5 -o joined_vcf -n alpine_all -a alygenomes.fasta -j /packages/run/jdk-8/current/bin/java -m 15500m -g $GATK/GenomeAnalysisTK.jar -i | tee alpine_all_joining_genotype_vcf.log
-# ./radseq_4_genotype_vcf.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f lyrata -c 5 -o joined_vcf -n lyrata_var -a alygenomes.fasta -j /packages/run/jdk-8/current/bin/java -m 15500m -g $GATK/GenomeAnalysisTK.jar | tee lyrata_var_joining_genotype_vcf.log
-./radseq_4_genotype_vcf.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f lyrata -c 5 -o joined_vcf -n lyrata_all -a alygenomes.fasta -j /packages/run/jdk-8/current/bin/java -m 15500m -g $GATK/GenomeAnalysisTK.jar -i | tee lyrata_all_joining_genotype_vcf.log
+# Temp directory
+echo "Creating temporal directory"
+mkdir tmp || exit 1
+echo
+
+# Running the task
+echo "Preprocessing the FASTQ files..."
+./radseq_4_genotype_vcf.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_var -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 24g -g /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar | tee "${DATADIRB}"_var_joining_genotype_vcf.log
+./radseq_4_genotype_vcf.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_all -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 24g -g /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -i | tee "${DATADIRB}"_all_joining_genotype_vcf.log
+echo
+
+# Remove unneeded file
+echo "Removing unneeded files"
+rm -rf tmp ${REFB%.*}* "${DATADIRB}" || { export CLEAN_SCRATCH='false'; exit 1; }
+echo
 
 # Copy results back to storage
-cp -a $SCRATCHDIR /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/ || export CLEAN_SCRATCH=false
-
-# Clean-up of SCRATCH
-if [ "$CLEAN_SCRATCH" != "false" ]; then rm -rf $SCRATCHDIR/*; fi
+echo "Copying results back to ${DATADIR}"
+cp -a "${SCRATCHDIR}" "${DATADIR}"/ || { export CLEAN_SCRATCH='false'; exit 1; }
+echo
 
 exit
 

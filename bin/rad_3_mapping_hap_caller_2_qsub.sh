@@ -61,7 +61,7 @@ cp -a "${DATADIR}"/"${LIBRARY}"/3_dedup/"${ALNF}"/* "${SCRATCHDIR}"/ || exit 1
 echo
 
 # Reference base name
-echo "Obtaining basename of reference file ${ALNF}"
+echo "Obtaining basename of reference file ${REF}"
 REFB="$(basename "${REF}")" || exit 1
 echo
 

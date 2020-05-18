@@ -181,7 +181,7 @@ while getopts "hrvf:c:o:d:q:a:j:m:t:" INITARGS; do
 			;;
 		*)
 			echo "Error! Unknown option!"
-			echo "See usage options: \"$0 -h\""
+			echo "See usage options: \"${0} -h\""
 			echo
 			exit 1
 			;;
@@ -190,8 +190,8 @@ while getopts "hrvf:c:o:d:q:a:j:m:t:" INITARGS; do
 
 # Check if all required binaries are available
 function toolcheck {
-	command -v "$1" >/dev/null 2>&1 || {
-		echo >&2 "Error! $1 is required but not installed. Aborting. Please, install it."
+	command -v "${1}" >/dev/null 2>&1 || {
+		echo >&2 "Error! ${1} is required but not installed. Aborting. Please, install it."
 		echo
 		exit 1
 		}
@@ -205,7 +205,7 @@ toolcheck parallel
 # Checking if all required parameters are provided
 if [ -z "${FQDIR}" ]; then
 	echo "Error! Input directory with FASTQ files (-f) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
@@ -218,37 +218,37 @@ if [ -z "${NCPU}" ]; then
 
 if [ -z "${TRIMDIR}" ]; then
 	echo "Error! Output directory for trimmed sequences (-o) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
 
 if [ -z "${DEDUPDIR}" ]; then
 	echo "Error! Output directory for deduplicated sequences (-d) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
 
 if [ -z "${QUALDIR}" ]; then
 	echo "Error! Output directory for quality reports (-q) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
 
 if [ -z "${ADAPTOR}" ]; then
 	echo "Error! Adaptor file (-a) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi
 
 if [ -z "${JAVA}" ]; then
-	toolcheck java
 	echo "Path to custom Java executable (-j) was not specified. Using default $(command -v java)"
 	JAVA="$(command -v java)"
 	echo
+	toolcheck java
 	fi
 
 if [ -z "${MEM}" ]; then
@@ -259,7 +259,7 @@ if [ -z "${MEM}" ]; then
 
 if [ -z "${TRIMMOMATIC}" ]; then
 	echo "Error! Path to Trimmomatic JAR file (-t) was not specified!"
-	echo "See usage options: \"$0 -h\""
+	echo "See usage options: \"${0} -h\""
 	echo
 	exit 1
 	fi

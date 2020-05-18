@@ -8,7 +8,7 @@
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-# qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=16gb:scratch_local=10gb -q ibot -m abe -N RADSeq_mapping_hapcaller."${ALNB}" -v WORKDIR="${WORKDIR}",DATADIR="${DATADIR}",LIBRARY="${LIBRARY}",ALNF="${ALNB}",REF="${REF}" ~/hybseq/bin/rad_3_mapping_hap_caller_2_qsub.sh
+# qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=16gb:scratch_local=10gb -q ibot -m abe -N RADSeq_mapping_hapcaller."${ALNB}" -v WORKDIR="${WORKDIR}",DATADIR="${DATADIR}",LIBRARY="${LIBRARY}",ALNF="${ALNB}",REF="${REF}" ~/radseq/bin/rad_3_mapping_hap_caller_2_qsub.sh
 
 # Checking if all required variables are provided
 if [ -z "${WORKDIR}" ]; then
@@ -67,7 +67,7 @@ echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./rad_3_mapping_hap_caller_3_run.sh -f "${ALNF}" -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 16g -p /software/picard/2.22.1/build/libs/picard.jar -g /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar | tee mapping_hap_caller."${ALNF}".log
+./rad_3_mapping_hap_caller_3_run.sh -f "${ALNF}" -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 16g -p /software/picard/2.22.1/build/libs/picard.jar -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar | tee mapping_hap_caller."${ALNF}".log
 echo
 
 # Remove unneeded file

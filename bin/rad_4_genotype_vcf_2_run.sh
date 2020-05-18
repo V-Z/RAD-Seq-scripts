@@ -124,13 +124,17 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 				OUTDIR="${OPTARG}"
 				echo "Output directory: ${OUTDIR}"
 				echo
-				else
-					echo "Error! You did not provide path to output directory (-o) \"${OPTARG}\"!"
-					echo
-					exit 1
-					fi
+				elif [ -n "${OPTARG}" ]; then
+					echo "Creating output directory '${OPTARG}'."
+					OUTDIR="${OPTARG}"
+					mkdir "${OUTDIR}" || { echo "Error! Can't create ${OUTDIR}!"; echo; exit 1; }
+					else
+						echo "Error! You did not provide path to output directory (-o) \"${OPTARG}\"!"
+						echo
+						exit 1
+						fi
 			;;
-		n) # Base name of the output file
+			n) # Base name of the output file
 			if [[ "${OPTARG}" =~ ${STRINGTEST} ]]; then
 				JOINTNAME="${OPTARG}"
 				echo "Name of the output file will be: ${JOINTNAME}${VCFOUTSUFIX}"
@@ -324,9 +328,9 @@ echo
 # Running Genotype GVCFs
 # NB check that (i) -Xmx has cpus-per-task*mem-per-cpu (e.g. 16*3=48) and (ii) -nt = cpus-per-task
 if [ "${INVAR}" == 'TRUE' ]; then
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T GenotypeGVCFs -R "${REFB}" "${SAMPLELIST}" -nt "${NCPU}" -o ../"${JOINTNAME}""${VCFOUTSUFIX}" --includeNonVariantSites || operationfailed
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T GenotypeGVCFs -R "${REFB}" ${SAMPLELIST} -nt "${NCPU}" -o ../"${JOINTNAME}""${VCFOUTSUFIX}" --includeNonVariantSites || operationfailed
 	else
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T GenotypeGVCFs -R "${REFB}" "${SAMPLELIST}" -nt "${NCPU}" -o ../"${JOINTNAME}""${VCFOUTSUFIX}" || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T GenotypeGVCFs -R "${REFB}" ${SAMPLELIST} -nt "${NCPU}" -o ../"${JOINTNAME}""${VCFOUTSUFIX}" || operationfailed
 		fi
 echo
 

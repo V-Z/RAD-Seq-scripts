@@ -1,36 +1,75 @@
 #!/bin/bash
 
-# qsub -l walltime=24:0:0 -l select=1:ncpus=2:mem=8gb:scratch_local=50gb -m abe bin/arabidopsis_5_hardfilter.sh
+# Author: Vojtěch Zeisek, https://trapa.cz/
+# License: GNU General Public License 3.0, https://www.gnu.org/licenses/gpl-3.0.html
+
+# 
+
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+# qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=48gb:scratch_local=100gb -q ibot -m abe ~/radseq/bin/rad_5_hardfilter_1_qsub.sh
 
 # Clean-up of SCRATCH
 trap 'clean_scratch' TERM EXIT
-trap 'cp -a $SCRATCHDIR $DATADIR/ && clean_scratch' TERM
+trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
 
-# Prepare the task
-cp -a /storage/praha1/home/$LOGNAME/rad/5_hardfilter/* $SCRATCHDIR/ || exit 1
-cp -a /storage/praha1/home/$LOGNAME/rad/ref/* $SCRATCHDIR/ || exit 1
-# cp -a /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/arenosa $SCRATCHDIR/ || exit 1
-cp -a /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/lyrata $SCRATCHDIR/ || exit 1
+# Location of data to filter
+# DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/arenosa'
+DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/lyrata'
+
+# Sample to process
+# SAMPLE='arenosa_var.join.raw.vcf.gz'
+SAMPLE='lyrata_var.join.raw.vcf.gz'
+
+# Reference
+# ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta
+REF='ref/arabidopsis/alygenomes.fasta'
 
 # Change working directory
-cd $SCRATCHDIR/ || exit 2
+echo "Going to working directory ${SCRATCHDIR}"
+cd "${SCRATCHDIR}"/ || exit 1
+echo
 
-# Launch it
-module add gatk-3.8-0
-module add parallel-20160622
-module add bcftools-1.9
-module add R-3.4.3-gcc
+# Required modules
+echo "Loading modules"
+module add jdk-8 || exit 1
+module add parallel-20200322 || exit 1
+module add bcftools-1.10.2 || exit 1
+echo
 
-# ./radseq_5_hardfilter.sh -f arenosa/alpine_var.join.raw.vcf.gz -n alpine_var_filtered -a alygenomes.fasta -e blacklisty.intervals -m 7800m -g $GATK/GenomeAnalysisTK.jar -l 0.25 -w 4 -y 4 | tee alpine_var_hardfilter.log
-# ./radseq_5_hardfilter.sh -f arenosa/alpine_var.join.raw.vcf.gz -n alpine_var_filtered -a alygenomes.fasta -e blacklisty.intervals -m 7800m -g $GATK/GenomeAnalysisTK.jar -l 0.5 -w 4 -y 4 | tee -a alpine_var_hardfilter.log
-# ./radseq_5_hardfilter.sh -f lyrata/lyrata_var.join.raw.vcf.gz -n lyrata_var_filtered -a alygenomes.fasta -e blacklisty.intervals -m 7800m -g $GATK/GenomeAnalysisTK.jar -l 0.25 -w 4 -y 4 | tee lyrata_var_hardfilter.log
-./radseq_5_hardfilter.sh -f lyrata/lyrata_var.join.raw.vcf.gz -n lyrata_var_filtered -a alygenomes.fasta -e blacklisty.intervals -m 7800m -g $GATK/GenomeAnalysisTK.jar -l 0.5 -w 4 -y 4 | tee -a lyrata_var_hardfilter.log
+# Copy data
+echo "Copying..."
+echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
+cp /storage/praha1/home/"${LOGNAME}"/radseq/{blacklisty.intervals,${REF%.*}*,bin/rad_5_hardfilter_2_run.sh} "${SCRATCHDIR}"/ || exit 1
+echo "Data to process - ${DATADIR}"
+cp "${DATADIR}"/"${SAMPLE}" "${DATADIR}"/"${SAMPLE}".tbi "${SCRATCHDIR}"/ || exit 1
+echo
+
+# Reference base name
+echo "Obtaining basename of reference file ${REF}"
+REFB="$(basename "${REF}")" || exit 1
+echo
+
+# Temp directory
+echo "Creating temporal directory"
+mkdir tmp || exit 1
+echo
+
+# Running the task
+echo "Preprocessing the FASTQ files..."
+./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 47g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 | tee "${SAMPLE%.*}"_hardfilter.log
+echo
+
+# Remove unneeded file
+echo "Removing unneeded files"
+rm -rf tmp ${REFB%.*}* blacklisty.intervals "${SAMPLE}" "${SAMPLE}".tbi || { export CLEAN_SCRATCH='false'; exit 1; }
+echo
 
 # Copy results back to storage
-cp -a $SCRATCHDIR /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/filtered_vcf/ || export CLEAN_SCRATCH=false
-
-# Clean-up of SCRATCH
-if [ "$CLEAN_SCRATCH" != "false" ]; then rm -rf $SCRATCHDIR/*; fi
+echo "Copying results back to ${DATADIR}"
+cp -a "${SCRATCHDIR}" "${DATADIR}"/ || { export CLEAN_SCRATCH='false'; exit 1; }
+echo
 
 exit
 

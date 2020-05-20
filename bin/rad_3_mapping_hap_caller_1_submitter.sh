@@ -11,7 +11,7 @@
 # Set data directories
 WORKDIR="/storage/praha1/home/${LOGNAME}/radseq"
 
-# Location of data to be trimmed
+# Location of data to map and call variants
 DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad'
 # Library to process
 # run_01_02_brian run_01_02_dip_tet_harvard run_03_04_dip_tet_2017_01_arenosa_lyrata run_05_dip_tet_2017_11_lyrata run_06_07_dip_tet_2018_01_lyrata run_2018_06_tet_arenosa run_08_dip_tet_2018_08_arenosa run_09_dip_tet_2019_01_lyrata run_10_dip_tet_2019_05_lyrata run_11_dip_tet_2019_06_arenosa run_12_dip_tet_2019_12_arenosa_lyrata

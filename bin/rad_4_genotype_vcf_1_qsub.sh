@@ -8,19 +8,30 @@
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-# qsub -l walltime=48:0:0 -l select=1:ncpus=8:mem=48gb:scratch_local=100gb -q ibot -m abe ~/radseq/bin/rad_4_genotype_vcf_1_qsub.sh
+# qsub -l walltime=48:0:0 -l select=1:ncpus=8:mem=64gb:scratch_local=100gb -q ibot -m abe ~/radseq/bin/rad_4_genotype_vcf_1_qsub.sh
 
 # Clean-up of SCRATCH
 trap 'clean_scratch' TERM EXIT
 trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
 
-# Location of data to be trimmed
+# Location of data to merge
 DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/arenosa'
 # DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/lyrata'
 
 # Reference
-# ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta
 REF='ref/arabidopsis/alygenomes.fasta'
+# REF='ref/cardamine/pseudohap_Camara_90M_10kb.fasta'
+
+# Change working directory
+echo "Going to working directory ${SCRATCHDIR}"
+cd "${SCRATCHDIR}"/ || exit 1
+echo
+
+# Required modules
+echo "Loading modules"
+module add jdk-8 || exit 1
+module add parallel-20200322 || exit 1
+echo
 
 # Copy data
 echo "Copying..."
@@ -40,17 +51,6 @@ echo "Obtaining basename of data directory ${DATADIR}"
 DATADIRB="$(basename "${DATADIR}")" || exit 1
 echo
 
-# Change working directory
-echo "Going to working directory ${SCRATCHDIR}"
-cd "${SCRATCHDIR}"/ || exit 1
-echo
-
-# Required modules
-echo "Loading modules"
-module add jdk-8 || exit 1
-module add parallel-20200322 || exit 1
-echo
-
 # Temp directory
 echo "Creating temporal directory"
 mkdir tmp || exit 1
@@ -58,8 +58,8 @@ echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./rad_4_genotype_vcf_2_run.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_var -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 48g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar | tee "${DATADIRB}"_var_joining_genotype_vcf.log
-# ./rad_4_genotype_vcf_2_run.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_all -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 48g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -i | tee "${DATADIRB}"_all_joining_genotype_vcf.log
+./rad_4_genotype_vcf_2_run.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_var -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 63g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar | tee "${DATADIRB}"_var_joining_genotype_vcf.log
+# ./rad_4_genotype_vcf_2_run.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_all -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 63g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -i | tee "${DATADIRB}"_all_joining_genotype_vcf.log
 echo
 
 # Remove unneeded file

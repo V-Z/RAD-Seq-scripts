@@ -14,6 +14,7 @@ VCFFILESNP='' # Output file: SNPs
 VCFFILESNPHARD='' # Output file: Hardfiltering SNPs
 VCFFILESNPPASS='' # Output file: Bi- and multiallelic SNPs
 VCFFILESNPBIAL='' # Output file: Biallelic SNPs
+VCFFILESNPFILT='' # Output file: Filtered non-variant SNPs
 REF='' # Reference sequence
 EXCLUDEPARALOGS='' # Paralogs to exclude
 JAVA='' # PATH to custom Java binary
@@ -222,6 +223,7 @@ if [ -z "${OUTNAME}" ]; then
 	VCFFILESNPHARD="${VCFFILESNP//\(^.*\)snp/\1hardfilter.snp/}" # Hardfiltering SNPs
 	VCFFILESNPPASS="${VCFFILESNPHARD//\(^.*\)snp/\1snp.pass/}" # Bi- and multiallelic SNPs
 	VCFFILESNPBIAL="${VCFFILESNPPASS//\(^.*\)snp\.pass/\1snp.pass.bial/}" # Biallelic SNPs
+	VCFFILESNPFILT="${VCFFILESNPPASS//\(^.*\)snp\.pass/\1snp.pass.filt/}" # Filtered non-variant SNPs
 	fi
 
 if [ -z "${REF}" ]; then
@@ -292,8 +294,8 @@ echo
 
 if [ "${INVAR}" == 'TRUE' ]; then
 
-	# Invariant VCF
-	echo "Processing invariant VCF"
+	# Non-variant VCF
+	echo "Processing non-variant VCF"
 	echo
 
 	# Create a filtering criterion
@@ -315,21 +317,25 @@ if [ "${INVAR}" == 'TRUE' ]; then
 	# Set the filtering for required minimal DP
 	echo "Marking filtered sites in the joint VCF ${VCFFILESNP}..."
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNP}" -o "${VCFFILESNPBIAL%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz --genotypeFilterExpression "DP < ${GENOTFILTDP}" --genotypeFilterName DP-"${GENOTFILTDP}" --setFilteredGtToNocall
+	"${JAVA}" -Xmx"${JAVAMEM}" -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNP}" -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz --genotypeFilterExpression "DP < ${GENOTFILTDP}" --genotypeFilterName DP-"${GENOTFILTDP}" --setFilteredGtToNocall
 	echo
-	echo "Marked filtered sites were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz"
+	echo "Marked filtered sites were saved as ${VCFFILESNPFILT%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz"
 	echo
 
 	# Set the filtering for required minimal average coverage for each called allele
+	echo "Checking if each allele that is called is covered by at least ${MINDPANCOV} reads on average"
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNPBIAL%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz -o lyrata_all.raw.hardfilter.dp50.dpan5.vcf.gz --filterExpression "DP / AN < ${MINDPANCOV}" --filterName DP-AN-"${MINDPANCOV}"
+	"${JAVA}" -Xmx"${JAVAMEM}" -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz --filterExpression "DP / AN < ${MINDPANCOV}" --filterName DP-AN-"${MINDPANCOV}"
 	echo
+	echo "Marked filtered sites were saved as ${VCFFILESNPFILT%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.vcf.gz"
 	echo
 
 	# Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
+	echo "Selecting variants based on presence in ${GENOTFILTDP} of indivs in ${VCFFILESNPFILT%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz joint VCF..."
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -jar "${GATK}" -T SelectVariants -R "${REF}" -V lyrata_all.raw.hardfilter.dp50.dpan5.vcf.gz -o lyrata_all.raw.hardfilter.dp50.dpan5.percmiss05.vcf.gz --maxNOCALLfraction 0.5
+	"${JAVA}" -Xmx"${JAVAMEM}" -jar "${GATK}" -T SelectVariants -R "${REF}" -V "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".percmiss"${MAXFRACTFILTGENOT}".vcf.gz --maxNOCALLfraction "${MAXFRACTFILTGENOT}"
 	echo
+	echo "Final selected variants were saved as ${VCFFILESNPFILT%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.percmiss${MAXFRACTFILTGENOT}.vcf.gz"
 	echo
 
 	else

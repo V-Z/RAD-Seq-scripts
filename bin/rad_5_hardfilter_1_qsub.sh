@@ -15,12 +15,12 @@ trap 'clean_scratch' TERM EXIT
 trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
 
 # Location of data to filter
-# DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/arenosa'
-DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/lyrata'
+DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/arenosa'
+# DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/lyrata'
 
 # Sample to process
-# SAMPLE='arenosa_var.join.raw.vcf.gz'
-SAMPLE='lyrata_var.join.raw.vcf.gz'
+# arenosa_all.join.raw.vcf.gz arenosa_var.join.raw.vcf.gz lyrata_all.join.raw.vcf.gz lyrata_var.join.raw.vcf.gz
+SAMPLE='arenosa_var.join.raw.vcf.gz'
 
 # Reference
 # ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta
@@ -59,6 +59,7 @@ echo
 # Running the task
 echo "Preprocessing the FASTQ files..."
 ./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 47g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 | tee "${SAMPLE%.*}"_hardfilter.log
+# ./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 47g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 -i | tee "${SAMPLE%.*}"_hardfilter.log
 echo
 
 # Remove unneeded file

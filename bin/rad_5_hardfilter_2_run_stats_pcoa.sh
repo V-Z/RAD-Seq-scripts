@@ -1,52 +1,76 @@
 #!/bin/bash
 
-# qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=48gb:scratch_local=50gb -m abe bin/rad_5_hardfilter_rstats_arabidopsis_cardamine.sh
+# Author: Vojtěch Zeisek, https://trapa.cz/
+# License: GNU General Public License 3.0, https://www.gnu.org/licenses/gpl-3.0.html
+
+# 
+
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+# qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=48gb:scratch_local=50gb -q ibot -m abe ~/radseq/bin/rad_5_hardfilter_2_run_stats_pcoa.sh
+
+# Clean-up of SCRATCH
+trap 'clean_scratch' TERM EXIT
+trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
+
+# Data location
+DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/filtered_vcf'
 
 # Change working directory
-# cd /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/arenosa/ || exit 1
-cd /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/joined_vcf/lyrata/ || exit 1
+echo "Going to working directory ${SCRATCHDIR}"
+cd "${SCRATCHDIR}"/ || exit 1
+echo
 
-# Copy R packages and script
-cp -a /storage/praha1/home/gunnera/arabidopsis/5_hardfilter/rpkgs . || exit 1
-cp /storage/praha1/home/gunnera/arabidopsis/5_hardfilter/stat_pca_rad.r . || exit 1
+# Required modules
+echo "Loading modules"
+module add R-3.6.2-gcc || exit 1
+echo
 
-# Launch it
-module add R-3.4.3-gcc || exit 1
+# Copy data
+echo "Copying..."
+echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
+cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{rpackages,bin/rad_5_hardfilter_3_stats_pcoa.r} "${SCRATCHDIR}"/ || exit 1
+echo "Data to process"
+cp "${DATADIR}"/arenosa/* "${SCRATCHDIR}"/ || exit 1
+# cp "${DATADIR}"/lyrata/* "${SCRATCHDIR}"/ || exit 1
+echo
 
 # PCA and more statistics using R script
-
-# Create directory for R outputs
-mkdir rstats || exit 1
 
 # Do the calculations
 echo "Calculating statistics, PCAs and distances using R"
 for VCFGZ in *.vcf.gz; do
-	echo "Processing $VCFGZ"
+	echo "Processing ${VCFGZ}"
+	echo
 	# Create output directory
-	mkdir rstats/$VCFGZ || exit 1
+	mkdir "${VCFGZ%.vcf.gz}" || exit 1
 	# Go to output directory
-	cd rstats/$VCFGZ || exit 1
-	# Copy R script to working directory
-	cp ../../stat_pca_rad.r . || exit 1
-	# Copy R packages
-	cp -a ../../rpkgs .
-	# Copy processed file
-	cp ../../$VCFGZ . || exit 1
+	cd "${VCFGZ%.vcf.gz}" || exit 1
+	# Copy R script to working directory, R packages, processed file
+	cp ../{rad_5_hardfilter_3_stats_pcoa.r,rpackages,"${VCFGZ}","${VCFGZ}".tbi} . || exit 1
 	# Prepare variable storing filename for R to read input tree
-	export VCFR="$VCFGZ"
+	export VCFR="${VCFGZ}" || exit 1
 	# Do the calculations
-	R CMD BATCH stat_pca_rad.r
+	R CMD BATCH --no-save --no-restore rad_5_hardfilter_3_stats_pcoa.r "${VCFGZ%.vcf.gz}".log
 	# Discard the variable
-	unset VCFR
+	unset VCFR || { export CLEAN_SCRATCH='false'; exit 1; }
 	# Cleanup
-	rm -rf rpkgs stat_pca_rad.r $VCFGZ || exit 1
+	rm -rf rad_5_hardfilter_3_stats_pcoa.r rpackages "${VCFGZ}" "${VCFGZ}".tbi || { export CLEAN_SCRATCH='false'; exit 1; }
 	# Go back
-	cd ../..
+	cd ../ || { export CLEAN_SCRATCH='false'; exit 1; }
+	echo
 	done
 
-# Cleanup
+# Remove unneeded file
+echo "Removing unneeded files"
+rm -rf rad_5_hardfilter_3_stats_pcoa.r rpackages ./*.vcf.gz ./*.vcf.gz.tbi || { export CLEAN_SCRATCH='false'; exit 1; }
 echo
-rm -rf rpkgs stat_pca_rad.r || exit 1
+
+# Copy results back to storage
+echo "Copying results back to ${DATADIR}"
+cp -a "${SCRATCHDIR}" "${DATADIR}"/ || export CLEAN_SCRATCH='false'
+echo
 
 exit
 

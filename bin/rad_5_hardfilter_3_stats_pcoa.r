@@ -13,10 +13,14 @@ options(error=expression(NULL))
 # Install packages
 # install.packages(pkgs=c("adegenet", "adegraphics", "BH", "pegas", "permute", "plogr", "sf", "spData", "StAMPP", "testthat", "vcfR"), lib="rpackages", repos="https://mirrors.nic.cz/R/", dependencies="Imports")
 # Libraries
-library(package=adegenet, lib.loc="rpackages")
-library(package=adegraphics, lib.loc="rpackages")
-library(package=StAMPP, lib.loc="rpackages")
-library(package=vcfR, lib.loc="rpackages")
+# library(package=adegenet, lib.loc="rpackages")
+# library(package=adegraphics, lib.loc="rpackages")
+# library(package=StAMPP, lib.loc="rpackages")
+# library(package=vcfR, lib.loc="rpackages")
+library(adegenet)
+library(adegraphics)
+library(StAMPP)
+library(vcfR)
 
 ## Input file
 vcf.file <- Sys.getenv("VCFR")

@@ -8,7 +8,7 @@
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-# qsub -l walltime=12:0:0 -l select=1:ncpus=1:mem=48gb:scratch_local=50gb -q ibot -m abe ~/radseq/bin/rad_5_hardfilter_2_run_stats_pcoa.sh
+# qsub -l walltime=24:0:0 -l select=1:ncpus=1:mem=48gb:scratch_local=100gb -q ibot -m abe ~/radseq/bin/rad_5_hardfilter_2_run_stats_pcoa.sh
 
 # Clean-up of SCRATCH
 trap 'clean_scratch' TERM EXIT
@@ -16,6 +16,10 @@ trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
 
 # Data location
 DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/filtered_vcf'
+
+# Reference
+# ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta
+REF='ref/arabidopsis/alygenomes.fasta'
 
 # Change working directory
 echo "Going to working directory ${SCRATCHDIR}"
@@ -31,10 +35,15 @@ echo
 # Copy data
 echo "Copying..."
 echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
-cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{rpackages,bin/rad_5_hardfilter_3_stats_pcoa.r} "${SCRATCHDIR}"/ || exit 1
+cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{${REF%.*}*,rpackages,bin/rad_5_hardfilter_3_stats_pcoa.r} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process"
 cp "${DATADIR}"/arenosa/* "${SCRATCHDIR}"/ || exit 1
 # cp "${DATADIR}"/lyrata/* "${SCRATCHDIR}"/ || exit 1
+echo
+
+# Reference base name
+echo "Obtaining basename of reference file ${REF}"
+REFB="$(basename "${REF}")" || exit 1
 echo
 
 # Statistics using BCFtools
@@ -43,7 +52,7 @@ echo "Calculating statistics using BCFtools"
 echo
 for VCFGZ in *.vcf.gz; do
 	echo "Processing ${VCFGZ}"
-	bcftools stats -F "${REF}" "${VCFGZ}" > "${VCFGZ%.vcf.gz}".stats.txt || { export CLEAN_SCRATCH='false'; exit 1; }
+	bcftools stats -F "${REFB}" "${VCFGZ}" > "${VCFGZ%.vcf.gz}".stats.txt || { export CLEAN_SCRATCH='false'; exit 1; }
 	echo
 	done
 
@@ -76,7 +85,7 @@ for VCFGZ in *.vcf.gz; do
 
 # Remove unneeded file
 echo "Removing unneeded files"
-rm -rf rad_5_hardfilter_3_stats_pcoa.r rpackages ./*.vcf.gz ./*.vcf.gz.tbi || { export CLEAN_SCRATCH='false'; exit 1; }
+rm -rf rad_5_hardfilter_3_stats_pcoa.r ${REFB%.*}* rpackages ./*.vcf.gz ./*.vcf.gz.tbi || { export CLEAN_SCRATCH='false'; exit 1; }
 echo
 
 # Copy results back to storage

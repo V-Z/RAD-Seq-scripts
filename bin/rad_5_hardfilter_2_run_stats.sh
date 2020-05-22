@@ -24,6 +24,7 @@ echo
 
 # Required modules
 echo "Loading modules"
+module add bcftools-1.10.2 || exit 1
 module add R-4.0.0-gcc || exit 1
 echo
 
@@ -36,10 +37,21 @@ cp "${DATADIR}"/arenosa/* "${SCRATCHDIR}"/ || exit 1
 # cp "${DATADIR}"/lyrata/* "${SCRATCHDIR}"/ || exit 1
 echo
 
-# PCA and more statistics using R script
+# Statistics using BCFtools
+
+echo "Calculating statistics using BCFtools"
+echo
+for VCFGZ in *.vcf.gz; do
+	echo "Processing ${VCFGZ}"
+	bcftools stats -F "${REF}" "${VCFGZ}" > "${VCFGZ%.vcf.gz}".stats.txt || { export CLEAN_SCRATCH='false'; exit 1; }
+	echo
+	done
+
+# Statistics using R script
 
 # Do the calculations
 echo "Calculating statistics, PCAs and distances using R"
+echo
 for VCFGZ in *.vcf.gz; do
 	echo "Processing ${VCFGZ}"
 	echo

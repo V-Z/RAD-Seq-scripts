@@ -408,7 +408,7 @@ echo
 
 # Statistics
 echo "Statistics of SNPs in VCF files using bcftools"
-find . -name "*.vcf.gz" | parallel -j 2 "echo '{/}' && bcftools stats -s - '{}' > '{.}'.stats.txt || operationfailed"
+find . -name "*.vcf.gz" | parallel -j 2 "echo '{/}' && bcftools stats -F ${REF} '{}' > '{.}'.stats.txt || operationfailed"
 echo
 
 echo "End: $(date)"

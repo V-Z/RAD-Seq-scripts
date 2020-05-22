@@ -44,14 +44,14 @@ pdf("dp_per_sample_boxplot.pdf", width=21, height=7)
 
 # Barplot of DP
 pdf("dp_per_sample_barplot.pdf", width=21, height=7)
-	barplot(apply(X=arabidopsis.vcf.dp, MARGIN=2, FUN=mean, na.rm=TRUE), las=3)
+	barplot(apply(X=vcf.dp, MARGIN=2, FUN=mean, na.rm=TRUE), las=3)
 	title("Mean DP per specimen")
 	abline(h=seq(from=0, to=60, by=10), col="red")
 	dev.off()
 
 # Heatmpa of DP
 pdf("dp_per_sample_heatmap.pdf", width=28, height=28)
-	heatmap.bp(x=arabidopsis.vcf.dp, col.ramp=rainbow(n=100, start=0.1))
+	heatmap.bp(x=vcf.dp, col.ramp=rainbow(n=100, start=0.1))
 	title("DP per specimens and loci")
 	dev.off()
 

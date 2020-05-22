@@ -52,7 +52,7 @@ pdf("dp_per_sample_heatmap.pdf", width=28, height=28)
 	dev.off()
 
 ## Convert to genlight
-rad.genlight <- vcfR2genlight(x=vcf.data, n.cores=2)
+rad.genlight <- vcfR2genlight(x=vcf.data, n.cores=1)
 pop(rad.genlight) <- substr(indNames(rad.genlight), start=1, stop=4) # Add pop names: here beginning of individuals names
 # See names
 indNames(rad.genlight)

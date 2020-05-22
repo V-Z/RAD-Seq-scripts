@@ -8,7 +8,7 @@
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-# qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=48gb:scratch_local=50gb -q ibot -m abe ~/radseq/bin/rad_5_hardfilter_2_run_stats_pcoa.sh
+# qsub -l walltime=4:0:0 -l select=1:ncpus=1:mem=48gb:scratch_local=50gb -q ibot -m abe ~/radseq/bin/rad_5_hardfilter_2_run_stats_pcoa.sh
 
 # Clean-up of SCRATCH
 trap 'clean_scratch' TERM EXIT
@@ -48,7 +48,7 @@ for VCFGZ in *.vcf.gz; do
 	# Go to output directory
 	cd "${VCFGZ%.vcf.gz}" || exit 1
 	# Copy R script to working directory, R packages, processed file
-	cp ../{rad_5_hardfilter_3_stats_pcoa.r,rpackages,"${VCFGZ}","${VCFGZ}".tbi} . || exit 1
+	cp -a ../{rad_5_hardfilter_3_stats_pcoa.r,rpackages,"${VCFGZ}","${VCFGZ}".tbi} . || exit 1
 	# Prepare variable storing filename for R to read input tree
 	export VCFR="${VCFGZ}" || exit 1
 	# Do the calculations

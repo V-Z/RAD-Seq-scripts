@@ -8,7 +8,7 @@
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-# qsub -l walltime=48:0:0 -l select=1:ncpus=2:mem=48gb:scratch_local=100gb -q ibot -m abe ~/radseq/bin/rad_5_hardfilter_1_qsub.sh
+# qsub -l walltime=96:0:0 -l select=1:ncpus=2:mem=96gb:scratch_local=100gb -q ibot -m abe ~/radseq/bin/rad_5_hardfilter_1_qsub.sh
 
 # Clean-up of SCRATCH
 trap 'clean_scratch' TERM EXIT
@@ -58,8 +58,8 @@ echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 47g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 | tee "${SAMPLE%.*}"_hardfilter.log
-# ./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 47g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 -i | tee "${SAMPLE%.*}"_hardfilter.log
+./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 95g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 | tee "${SAMPLE%.*}"_hardfilter.log
+# ./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 95g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 -i | tee "${SAMPLE%.*}"_hardfilter.log
 echo
 
 # Remove unneeded file

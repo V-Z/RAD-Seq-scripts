@@ -35,7 +35,7 @@ echo
 # Copy data
 echo "Copying..."
 echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
-cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{${REF%.*}*,rpackages,bin/rad_5_hardfilter_3_stats_pcoa.r} "${SCRATCHDIR}"/ || exit 1
+cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{${REF%.*}*,rpackages,bin/rad_5_hardfilter_2_stats.r} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process"
 cp "${DATADIR}"/arenosa/* "${SCRATCHDIR}"/ || exit 1
 # cp "${DATADIR}"/lyrata/* "${SCRATCHDIR}"/ || exit 1
@@ -69,15 +69,15 @@ for VCFGZ in *.vcf.gz; do
 	# Go to output directory
 	cd "${VCFGZ%.vcf.gz}" || exit 1
 	# Copy R script to working directory, R packages, processed file
-	cp -a ../{rad_5_hardfilter_3_stats_pcoa.r,rpackages,"${VCFGZ}","${VCFGZ}".tbi} . || exit 1
+	cp -a ../{rad_5_hardfilter_2_stats.r,rpackages,"${VCFGZ}","${VCFGZ}".tbi} . || exit 1
 	# Prepare variable storing filename for R to read input tree
 	export VCFR="${VCFGZ}" || exit 1
 	# Do the calculations
-	R CMD BATCH --no-save --no-restore rad_5_hardfilter_3_stats_pcoa.r "${VCFGZ%.vcf.gz}".log
+	R CMD BATCH --no-save --no-restore rad_5_hardfilter_2_stats.r "${VCFGZ%.vcf.gz}".log
 	# Discard the variable
 	unset VCFR || { export CLEAN_SCRATCH='false'; exit 1; }
 	# Cleanup
-	rm -rf rad_5_hardfilter_3_stats_pcoa.r rpackages "${VCFGZ}" "${VCFGZ}".tbi || { export CLEAN_SCRATCH='false'; exit 1; }
+	rm -rf rad_5_hardfilter_2_stats.r rpackages "${VCFGZ}" "${VCFGZ}".tbi || { export CLEAN_SCRATCH='false'; exit 1; }
 	# Go back
 	cd ../ || { export CLEAN_SCRATCH='false'; exit 1; }
 	echo
@@ -85,7 +85,7 @@ for VCFGZ in *.vcf.gz; do
 
 # Remove unneeded file
 echo "Removing unneeded files"
-rm -rf rad_5_hardfilter_3_stats_pcoa.r ${REFB%.*}* rpackages ./*.vcf.gz ./*.vcf.gz.tbi || { export CLEAN_SCRATCH='false'; exit 1; }
+rm -rf rad_5_hardfilter_2_stats.r ${REFB%.*}* rpackages ./*.vcf.gz ./*.vcf.gz.tbi || { export CLEAN_SCRATCH='false'; exit 1; }
 echo
 
 # Copy results back to storage

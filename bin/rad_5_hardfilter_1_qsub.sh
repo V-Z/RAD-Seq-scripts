@@ -41,7 +41,7 @@ echo
 # Copy data
 echo "Copying..."
 echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
-cp /storage/praha1/home/"${LOGNAME}"/radseq/{blacklisty.intervals,${REF%.*}*,bin/rad_5_hardfilter_2_run.sh} "${SCRATCHDIR}"/ || exit 1
+cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{blacklisty.intervals,${REF%.*}*,rpackages,bin/rad_5_hardfilter_2_run.sh,bin/rad_5_hardfilter_2_stats.r} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process - ${DATADIR}"
 cp "${DATADIR}"/"${SAMPLE}" "${DATADIR}"/"${SAMPLE}".tbi "${SCRATCHDIR}"/ || exit 1
 echo
@@ -64,7 +64,7 @@ echo
 
 # Remove unneeded file
 echo "Removing unneeded files"
-rm -rf tmp ${REFB%.*}* blacklisty.intervals "${SAMPLE}" "${SAMPLE}".tbi || { export CLEAN_SCRATCH='false'; exit 1; }
+rm -rf tmp ${REFB%.*}* blacklisty.intervals "${SAMPLE}" "${SAMPLE}".tbi rad_5_hardfilter_2_run.sh rad_5_hardfilter_2_stats.r rpackages || { export CLEAN_SCRATCH='false'; exit 1; }
 echo
 
 # Copy results back to storage

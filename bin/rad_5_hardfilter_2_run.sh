@@ -406,10 +406,35 @@ echo
 echo "All output files are in directory \"$(pwd)\" and names start with \"${OUTNAME}*\""
 echo
 
-# Statistics
+# Statistics using BCFtools
 echo "Statistics of SNPs in VCF files using bcftools"
 find . -name "*.vcf.gz" | parallel -j 2 "echo '{/}' && bcftools stats -F ${REF} '{}' > '{.}'.stats.txt || operationfailed"
 echo
+
+# Statistics using R script
+echo "Calculating statistics, PCAs and distances using R"
+echo
+for VCFGZ in *.vcf.gz; do
+	echo "Processing ${VCFGZ}"
+	echo
+	# Create output directory
+	mkdir "${VCFGZ%.vcf.gz}" || operationfailed
+	# Go to output directory
+	cd "${VCFGZ%.vcf.gz}" || operationfailed
+	# Copy R script to working directory, R packages, processed file
+	cp -a ../{rad_5_hardfilter_2_stats.r,rpackages,"${VCFGZ}","${VCFGZ}".tbi} . || operationfailed
+	# Prepare variable storing filename for R to read input tree
+	export VCFR="${VCFGZ}" || operationfailed
+	# Do the calculations
+	R CMD BATCH --no-save --no-restore rad_5_hardfilter_2_stats.r "${VCFGZ%.vcf.gz}".log
+	# Discard the variable
+	unset VCFR || operationfailed
+	# Cleanup
+	rm -rf rad_5_hardfilter_2_stats.r rpackages "${VCFGZ}" "${VCFGZ}".tbi || operationfailed
+	# Go back
+	cd ../ || operationfailed
+	echo
+	done
 
 echo "End: $(date)"
 echo

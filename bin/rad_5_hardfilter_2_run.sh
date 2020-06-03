@@ -219,11 +219,11 @@ if [ -z "${OUTNAME}" ]; then
 	echo "Base name of output join VCF (-n) was not set. Names of output files will start with name of input file."
 	echo
 	# Names of output files are derived from the input name
-	VCFFILESNP="${VCFFILE//\(^.*\)vcf/\1snp.vcf/}" # SNPs
-	VCFFILESNPHARD="${VCFFILESNP//\(^.*\)snp/\1hardfilter.snp/}" # Hardfiltering SNPs
-	VCFFILESNPPASS="${VCFFILESNPHARD//\(^.*\)snp/\1snp.pass/}" # Bi- and multiallelic SNPs
-	VCFFILESNPBIAL="${VCFFILESNPPASS//\(^.*\)snp\.pass/\1snp.pass.bial/}" # Biallelic SNPs
-	VCFFILESNPFILT="${VCFFILESNPPASS//\(^.*\)snp\.pass/\1snp.pass.filt/}" # Filtered non-variant SNPs
+	VCFFILESNP=$(echo "${VCFFILEB}" | sed 's/\(^.*\)vcf/\1snp.vcf/') # SNPs
+	VCFFILESNPHARD=$(echo "${VCFFILESNP}" | sed 's/\(^.*\)snp/\1hardfilter.snp/') # Hardfiltering SNPs
+	VCFFILESNPPASS=$(echo "${VCFFILESNPHARD}" | sed 's/\(^.*\)snp/\1snp.pass/') # Bi- and multiallelic SNPs
+	VCFFILESNPBIAL=$(echo "${VCFFILESNPPASS}" | sed 's/\(^.*\)snp\.pass/\1snp.pass.bial/') # Biallelic SNPs
+	VCFFILESNPFILT=$(echo "${VCFFILESNPPASS}" | sed 's/\(^.*\)snp\.pass/\1snp.pass.filt/') # Filtered non-variant SNPs
 	fi
 
 if [ -z "${REF}" ]; then

@@ -15,8 +15,8 @@ trap 'clean_scratch' TERM EXIT
 trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
 
 # Location of data to merge
-DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/arenosa'
-# DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/lyrata'
+DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/arenosa'
+# DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/for_join/lyrata'
 
 # Reference
 REF='ref/arabidopsis/alygenomes.fasta'
@@ -58,8 +58,8 @@ echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./rad_4_genotype_vcf_2_run.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_var -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 63g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar | tee "${DATADIRB}"_var_joining_genotype_vcf.log
-# ./rad_4_genotype_vcf_2_run.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_all -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 63g -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -i | tee "${DATADIRB}"_all_joining_genotype_vcf.log
+./rad_4_genotype_vcf_2_run.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_var -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 63g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar | tee "${DATADIRB}"_var_joining_genotype_vcf.log
+# ./rad_4_genotype_vcf_2_run.sh -w "raw.g.vcf" -u ".gz" -x ".join.raw.vcf.gz" -f "${DATADIRB}" -c 7 -o "${DATADIRB}"_vcf -n "${DATADIRB}"_all -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 63g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -i | tee "${DATADIRB}"_all_joining_genotype_vcf.log
 echo
 
 # Remove unneeded file

@@ -15,7 +15,7 @@ trap 'clean_scratch' TERM EXIT
 trap 'cp -a ${SCRATCHDIR} ${DATADIR}/ && clean_scratch' TERM
 
 # Location of data to be demultiplexed
-DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad'
+DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad'
 # Library to process
 # run_03_04_dip_tet_2017_01_arenosa_lyrata run_05_dip_tet_2017_11_lyrata run_06_07_dip_tet_2018_01_lyrata run_08_dip_tet_2018_08_arenosa run_09_dip_tet_2019_01_lyrata run_10_dip_tet_2019_05_lyrata run_11_dip_tet_2019_06_arenosa run_12_dip_tet_2019_12_arenosa_lyrata run_2018_06_tet_arenosa
 # cardamine_run_01_test cardamine_run_02_test

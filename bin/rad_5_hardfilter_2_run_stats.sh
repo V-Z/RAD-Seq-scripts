@@ -15,7 +15,7 @@ trap 'clean_scratch' TERM EXIT
 trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
 
 # Data location
-DATADIR='/auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/filtered_vcf'
+DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/filtered_vcf'
 
 # Reference
 # ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta

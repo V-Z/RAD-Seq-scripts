@@ -23,7 +23,7 @@ DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/1_joined_vcf/areno
 SAMPLE='arenosa_var.join.raw.vcf.gz'
 
 # Reference
-# ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta
+# ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta ref/minuartia/minuartia_combined_ref.fasta
 REF='ref/arabidopsis/alygenomes.fasta'
 
 # Change working directory

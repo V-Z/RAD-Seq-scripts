@@ -19,8 +19,8 @@ DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad'
 # Library to process
 # run_01_02_brian run_01_02_dip_tet_harvard run_03_04_dip_tet_2017_01_arenosa_lyrata run_05_dip_tet_2017_11_lyrata run_06_07_dip_tet_2018_01_lyrata run_2018_06_tet_arenosa run_08_dip_tet_2018_08_arenosa run_09_dip_tet_2019_01_lyrata run_10_dip_tet_2019_05_lyrata run_10_dip_tet_2019_05_lyrata_merged run_11_dip_tet_2019_06_arenosa run_12_dip_tet_2019_12_arenosa_lyrata run_13_dip_tet_2020_08_arenosa
 # cardamine_run_01_test cardamine_run_02_test
-# minuartia_run_01_2017 minuartia_run_02_2019
-LIBRARY='run_2018_06_tet_arenosa'
+# minuartia_run_01_2017 minuartia_run_02_2019 minuartia_run_02_2019_merged
+LIBRARY='minuartia_run_02_2019_merged'
 
 # Change working directory
 echo "Going to working directory ${SCRATCHDIR}"

@@ -301,7 +301,7 @@ if [ "${INVAR}" == 'TRUE' ]; then
 	# Create a filtering criterion
 	echo "Hard filtering SNPs from joint VCF ${VCFFILE}..."
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILE}" -o "${VCFFILESNPHARD}" --filterExpression "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0" --filterName "Rad_filter1"
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILE}" -o "${VCFFILESNPHARD}" --filterExpression 'QD < 2.0' --filterName 'RAD_QD' --filterExpression 'FS > 60.0' --filterName 'RAD_FS' --filterExpression 'MQ < 40.0' --filterName 'RAD_MQ' --filterExpression 'MQRankSum < -12.5' --filterName 'RAD_MQRS' --filterExpression 'ReadPosRankSum < -8.0' --filterName 'RAD_RPRS' --filterExpression 'SOR > 3.0' --filterName 'RAD_SOR' || operationfailed
 	echo
 	echo "Hard filtered SNPs were saved as ${VCFFILESNPHARD}"
 	echo
@@ -309,7 +309,7 @@ if [ "${INVAR}" == 'TRUE' ]; then
 	# Select only non-variant sites
 	echo "Extracting non-variant SNPs from ${VCFFILESNPHARD}..."
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V "${VCFFILESNPHARD}" -selectType NO_VARIATION -o "${VCFFILESNP}" -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals "${EXCLUDEPARALOGS}" --excludeFiltered
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V "${VCFFILESNPHARD}" -selectType NO_VARIATION -o "${VCFFILESNP}" -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals "${EXCLUDEPARALOGS}" --excludeFiltered || operationfailed
 	echo
 	echo "File with extracted non-variant SNPs was saved as ${VCFFILESNP}"
 	echo
@@ -317,7 +317,7 @@ if [ "${INVAR}" == 'TRUE' ]; then
 	# Set the filtering for required minimal DP
 	echo "Marking filtered sites in the joint VCF ${VCFFILESNP}..."
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNP}" -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz --genotypeFilterExpression "DP < ${GENOTFILTDP}" --genotypeFilterName DP-"${GENOTFILTDP}" --setFilteredGtToNocall
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNP}" -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz --genotypeFilterExpression "DP < ${GENOTFILTDP}" --genotypeFilterName DP-"${GENOTFILTDP}" --setFilteredGtToNocall || operationfailed
 	echo
 	echo "Marked filtered sites were saved as ${VCFFILESNPFILT%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz"
 	echo
@@ -325,7 +325,7 @@ if [ "${INVAR}" == 'TRUE' ]; then
 	# Set the filtering for required minimal average coverage for each called allele
 	echo "Checking if each allele that is called is covered by at least ${MINDPANCOV} reads on average"
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz --filterExpression "DP / AN < ${MINDPANCOV}" --filterName DP-AN-"${MINDPANCOV}"
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz --filterExpression "DP / AN < ${MINDPANCOV}" --filterName DP-AN-"${MINDPANCOV}" || operationfailed
 	echo
 	echo "Marked filtered sites were saved as ${VCFFILESNPFILT%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.vcf.gz"
 	echo
@@ -333,7 +333,7 @@ if [ "${INVAR}" == 'TRUE' ]; then
 	# Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
 	echo "Selecting variants based on presence in ${GENOTFILTDP} of indivs in ${VCFFILESNPFILT%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz joint VCF..."
 	echo
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".percmiss"${MAXFRACTFILTGENOT}".vcf.gz --maxNOCALLfraction "${MAXFRACTFILTGENOT}"
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz -o "${VCFFILESNPFILT%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".percmiss"${MAXFRACTFILTGENOT}".vcf.gz --maxNOCALLfraction "${MAXFRACTFILTGENOT}" || operationfailed
 	echo
 	echo "Final selected variants were saved as ${VCFFILESNPFILT%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.percmiss${MAXFRACTFILTGENOT}.vcf.gz"
 	echo
@@ -355,12 +355,12 @@ if [ "${INVAR}" == 'TRUE' ]; then
 		# Create a filtering criterion
 		echo "Hard filtering SNPs from joint VCF ${VCFFILESNP}..."
 		echo
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNP}" -o "${VCFFILESNPHARD}" --filterExpression "QD < 2.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || SOR < 3.0" --filterName "Rad_filter1" || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNP}" -o "${VCFFILESNPHARD}" --filterExpression 'QD < 2.0' --filterName 'RAD_QD' --filterExpression 'FS > 60.0' --filterName 'RAD_FS' --filterExpression 'MQ < 40.0' --filterName 'RAD_MQ' --filterExpression 'MQRankSum < -12.5' --filterName 'RAD_MQRS' --filterExpression 'ReadPosRankSum < -8.0' --filterName 'RAD_RPRS' --filterExpression 'SOR > 3.0' --filterName 'RAD_SOR' || operationfailed
 		echo
 		echo "Hard filtered SNPs were saved as ${VCFFILESNPHARD}"
 		echo
 
-		# Extract SNPs (both bi- and multiallelic) passing the Rad_filter1 criterion
+		# Extract SNPs (both bi- and multiallelic) passing the RAD_* filters criterions
 		echo "Extracting only passing SNPs from joint VCF ${VCFFILESNPHARD}..."
 		echo
 		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V "${VCFFILESNPHARD}" -o "${VCFFILESNPPASS}" --excludeFiltered || operationfailed

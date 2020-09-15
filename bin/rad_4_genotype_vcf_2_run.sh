@@ -3,7 +3,7 @@
 # Initialize variables
 VCFNAME='' # Default name (sufix) of input VCF files (e.g. "raw.g.vcf")
 VCFCOMPRESSION='' # Default compression of input VCF files; if any, add "." on the beginning (e.g. ".gz")
-VCFOUTSUFIX='' # Default sufix of output VCF file, add "." on the beginning (e.g. ".raw.vcf.gz")
+VCFOUTSUFIX='' # Default sufix of output VCF file, add "." on the beginning (e.g. ".vcf.gz")
 STRINGTEST='^[a-zA-Z0-9_.]+$' # Testing if provided string contains only valid characters
 VCFDIR='' # Input directory with VCF files
 STARTDIR="$(pwd)" # Current working directory
@@ -31,11 +31,11 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 			echo -e "\t-v\tPrint script version and exit."
 			echo -e "\t-w\tName (sufix) of input VCF files (e.g. \"raw.g.vcf\")."
 			echo -e "\t-u\tCompression of input VCF files; if any, add \".\" on the beginning (e.g. \".gz\")."
-			echo -e "\t-x\tSufix of output VCF file, add \".\" on the beginning (e.g. \".raw.vcf.gz\")."
+			echo -e "\t-x\tSufix of output VCF file, add \".\" on the beginning (e.g. \".vcf.gz\")."
 			echo -e "\t-f\tInput directory with VCF files saved as e.g. \"*.raw.g.vcf.gz\"."
 			echo -e "\t-c\tNumber of CPU threads to use for parallel operations. If not provided, default is 8."
 			echo -e "\t-o\tOutput directory. It should be empty."
-			echo -e "\t-n\tBase name of output join VCF. Sufix (e.g. \".raw.vcf.gz\") will be added. Allowed characters are letters, numbers, underscore or dot. If not provided, default \"join\" will be used (e.g. \"join.raw.vcf.gz\")."
+			echo -e "\t-n\tBase name of output join VCF. Sufix (e.g. \".vcf.gz\") will be added. Allowed characters are letters, numbers, underscore or dot. If not provided, default \"join\" will be used (e.g. \"join.vcf.gz\")."
 			echo -e "\t-a\tReference FASTA file."
 			echo -e "\t-j\tOptional path to custom Java binary (default is output of \`command -v java\`; GATK requires Oracle Java)."
 			echo -e "\t-m\tMaximal memory consumption allowed to GATK. Input as common for 'jar -Xmx', e.g. 12g for '-Xmx12g'. Default is 24g."
@@ -79,13 +79,13 @@ while getopts "hrvw:u:x:f:c:o:n:a:j:m:g:i" INITARGS; do
 					exit 1
 					fi
 			;;
-		x) # Sufix of output VCF file (default is ".raw.vcf.gz")
+		x) # Sufix of output VCF file (default is ".vcf.gz")
 			if [[ "${OPTARG}" =~ ${STRINGTEST} ]]; then
 				VCFOUTSUFIX="${OPTARG}"
 				echo "Sufix of output VCF file: ${VCFOUTSUFIX}"
 				echo
 				else
-					echo "Error! As sufix of output VCF file (-x) \"${OPTARG}\" you did not provide a valid string containing only letters, numbers, dots and underscore (e.g. \".raw.vcf.gz\")!"
+					echo "Error! As sufix of output VCF file (-x) \"${OPTARG}\" you did not provide a valid string containing only letters, numbers, dots and underscore (e.g. \".vcf.gz\")!"
 					echo
 					exit 1
 					fi
@@ -282,8 +282,8 @@ if [ -z "${VCFCOMPRESSION}" ]; then
 	fi
 
 if [ -z "${VCFOUTSUFIX}" ]; then
-	echo "Sufix of output VCF file (-x) was not set. Using default '.raw.vcf.gz'."
-	VCFOUTSUFIX='.raw.vcf.gz'
+	echo "Sufix of output VCF file (-x) was not set. Using default '.vcf.gz'."
+	VCFOUTSUFIX='.vcf.gz'
 	echo
 	fi
 

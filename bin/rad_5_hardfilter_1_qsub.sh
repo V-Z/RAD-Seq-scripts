@@ -19,8 +19,8 @@ DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/1_joined_vcf/areno
 # DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/1_joined_vcf/lyrata'
 
 # Sample to process
-# arenosa_all.join.raw.vcf.gz arenosa_var.join.raw.vcf.gz lyrata_all.join.raw.vcf.gz lyrata_var.join.raw.vcf.gz
-SAMPLE='arenosa_var.join.raw.vcf.gz'
+# arenosa_all.join.vcf.gz arenosa_var.join.vcf.gz lyrata_all.join.vcf.gz lyrata_var.join.vcf.gz
+SAMPLE='arenosa_var.join.vcf.gz'
 
 # Reference
 # ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta ref/minuartia/minuartia_combined_ref.fasta
@@ -57,8 +57,8 @@ echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 95g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 | tee "${SAMPLE%.*}"_hardfilter.log
-# ./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n "${SAMPLE%.*}".filtered -a "${REFB}" -e blacklisty.intervals -m 95g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 -i | tee "${SAMPLE%.*}"_hardfilter.log
+./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n ${SAMPLE%.*}.filtered -a "${REFB}" -e blacklisty.intervals -m 95g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 | tee ${SAMPLE%.*}_hardfilter.log
+# ./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n ${SAMPLE%.*}.filtered -a "${REFB}" -e blacklisty.intervals -m 95g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.7 -w 4 -y 4 -i | tee ${SAMPLE%.*}_hardfilter.log
 echo
 
 # Remove unneeded file

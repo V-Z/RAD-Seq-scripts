@@ -205,7 +205,7 @@ if [ -z "${VCFFILE}" ]; then
 	fi
 
 if [ -z "${OUTNAME}" ]; then
-	echo "Base name of output join VCF (-n) was not set. Names of output files will start with name of input file."
+	echo "Base name of output join VCF (-n) was not set. Names of output files will start with name of input file (${VCFFILE%.vcf.gz})."
 	echo
 	fi
 
@@ -290,9 +290,9 @@ if [ "${INVAR}" == 'TRUE' ]; then
 # 		VCFFILESNPPASS=$(echo "${VCFFILESNPHARD}" | sed 's/\(^.*\)snp/\1snp.pass/') # Bi- and multiallelic SNPs
 # 		VCFFILESNPBIAL=$(echo "${VCFFILESNPPASS}" | sed 's/\(^.*\)snp\.pass/\1snp.pass.bial/') # Biallelic SNPs
 # 		VCFFILESNPFILT=$(echo "${VCFFILESNPPASS}" | sed 's/\(^.*\)snp\.pass/\1snp.pass.filt/') # Filtered non-variant SNPs
-		VCFFILEINVR=$(echo "${VCFFILE}" | sed 's/\(^.*\)vcf/\1invar.vcf/') # Only invariant sites selected
-		VCFFILEQUAL=$(echo "${VCFFILE}" | sed 's/\(^.*\)vcf/\1invar.qual.vcf/') # Sites passing quality criterion
-		VCFFILEPASS=$(echo "${VCFFILE}" | sed 's/\(^.*\)vcf/\1invar.qual.pass.vcf/') # Filtered non-variant VCF
+		VCFFILEINVR=${VCFFILE%.vcf.gz}.invar.vcf.gz # Only invariant sites selected
+		VCFFILEQUAL=${VCFFILE%.vcf.gz}.invar.qual.vcf.gz # Sites passing quality criterion
+		VCFFILEPASS=${VCFFILE%.vcf.gz}.invar.qual.pass.vcf.gz # Filtered non-variant VCF
 		else
 			# Names of output files are derived from the base name provided by the user
 # 			VCFFILESNP="${OUTNAME}".raw.snp.vcf.gz # SNPs
@@ -378,16 +378,16 @@ if [ "${INVAR}" == 'TRUE' ]; then
 		# Creating names for output files
 		if [ -z "${OUTNAME}" ]; then
 			# Names of output files are derived from the input name
-			VCFFILESNP=$(echo "${VCFFILE}" | sed 's/\(^.*\)vcf/\1raw.snp.vcf/') # SNPs
-			VCFFILESNPHARD=$(echo "${VCFFILE}" | sed 's/\(^.*\)vcf/\1raw.hardfilter.snp/') # Hardfiltering SNPs
-			VCFFILESNPPASS=$(echo "${VCFFILE}" | sed 's/\(^.*\)vcf/\1raw.hardfilter.snp.pass/') # Bi- and multiallelic SNPs
-			VCFFILESNPBIAL=$(echo "${VCFFILE}" | sed 's/\(^.*\)vcf/\1raw.hardfilter.snp.pass.bial/') # Biallelic SNPs
+			VCFFILESNP=${VCFFILE%.vcf.gz}.snp.vcf.gz # SNPs
+			VCFFILESNPHARD=${VCFFILE%.vcf.gz}.snp.hardfilter.vcf.gz # Hardfiltering SNPs
+			VCFFILESNPPASS=${VCFFILE%.vcf.gz}.snp.hardfilter.pass.vcf.gz # Bi- and multiallelic SNPs
+			VCFFILESNPBIAL=${VCFFILE%.vcf.gz}.snp.hardfilter.pass.bial.vcf.gz # Biallelic SNPs
 			else
 				# Names of output files are derived from the base name provided by the user
-				VCFFILESNP="${OUTNAME}".raw.snp.vcf.gz # SNPs
-				VCFFILESNPHARD="${OUTNAME}".raw.hardfilter.snp.vcf.gz # Hardfiltering SNPs
-				VCFFILESNPPASS="${OUTNAME}".raw.hardfilter.snp.pass.vcf.gz # Bi- and multiallelic SNPs
-				VCFFILESNPBIAL="${OUTNAME}".raw.hardfilter.snp.pass.bial.vcf.gz # Biallelic SNPs
+				VCFFILESNP="${OUTNAME}".snp.vcf.gz # SNPs
+				VCFFILESNPHARD="${OUTNAME}".snp.hardfilter.vcf.gz # Hardfiltering SNPs
+				VCFFILESNPPASS="${OUTNAME}".snp.hardfilter.pass.vcf.gz # Bi- and multiallelic SNPs
+				VCFFILESNPBIAL="${OUTNAME}".snp.hardfilter.pass.bial.vcf.gz # Biallelic SNPs
 				fi
 
 # NOTE Filtration according to vlkofly
@@ -428,7 +428,7 @@ if [ "${INVAR}" == 'TRUE' ]; then
 		# Set the filtering for required minimal DP
 		echo "Marking filtered sites in the joint VCF ${VCFFILESNPBIAL}..."
 		echo
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNPBIAL}" -o "${VCFFILESNPBIAL%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz --genotypeFilterExpression "DP < ${GENOTFILTDP}" --genotypeFilterName DP-"${GENOTFILTDP}" --setFilteredGtToNocall || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNPBIAL}" -o ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".vcf.gz --genotypeFilterExpression "DP < ${GENOTFILTDP}" --genotypeFilterName DP-"${GENOTFILTDP}" --setFilteredGtToNocall || operationfailed
 		echo
 		echo "Marked filtered sites were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz"
 		echo
@@ -436,7 +436,7 @@ if [ "${INVAR}" == 'TRUE' ]; then
 		# Set the filtering for required minimal average coverage for each called allele
 		echo "Checking if each allele that is called is covered by at least ${MINDPANCOV} reads on average"
 		echo
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V "${VCFFILESNPBIAL%.vcf.gz}".dp"${GENOTFILTDP}".vcf.gz -o "${VCFFILESNPBIAL%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz --filterExpression "DP / AN < ${MINDPANCOV}" --filterName DP-AN-"${MINDPANCOV}" || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz --filterExpression "DP / AN < ${MINDPANCOV}" --filterName DP-AN-"${MINDPANCOV}" || operationfailed
 		echo
 		echo "Marked filtered sites were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.vcf.gz"
 		echo
@@ -444,7 +444,7 @@ if [ "${INVAR}" == 'TRUE' ]; then
 		# Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
 		echo "Selecting variants based on presence in ${GENOTFILTDP} of indivs in ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz joint VCF..."
 		echo
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V "${VCFFILESNPBIAL%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz -o "${VCFFILESNPBIAL%.vcf.gz}".dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".percmiss"${MAXFRACTFILTGENOT}".vcf.gz --maxNOCALLfraction "${MAXFRACTFILTGENOT}" || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".percmiss"${MAXFRACTFILTGENOT}".vcf.gz --maxNOCALLfraction "${MAXFRACTFILTGENOT}" || operationfailed
 		echo
 		echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.percmiss${MAXFRACTFILTGENOT}.vcf.gz"
 		echo
@@ -459,7 +459,7 @@ echo
 echo "Statistics of SNPs in VCF files using bcftools"
 for VCFGZ in *.vcf.gz; do
 	echo "Processing ${VCFGZ}"
-	bcftools stats --threads 2 -F "${REF}" "${VCFGZ}" > "${VCFGZ%.vcf.gz}".stats.txt || operationfailed
+	bcftools stats --threads 2 -F "${REF}" "${VCFGZ}" > ${VCFGZ%.vcf.gz}.stats.txt || operationfailed
 	echo
 	done
 
@@ -470,15 +470,15 @@ for VCFGZ in *.vcf.gz; do
 	echo "Processing ${VCFGZ}"
 	echo
 	# Create output directory
-	mkdir "${VCFGZ%.vcf.gz}" || operationfailed
+	mkdir ${VCFGZ%.vcf.gz} || operationfailed
 	# Go to output directory
-	cd "${VCFGZ%.vcf.gz}" || operationfailed
+	cd ${VCFGZ%.vcf.gz} || operationfailed
 	# Copy R script to working directory, R packages, processed file
 	cp -a ../{rad_5_hardfilter_2_stats.r,rpackages,"${VCFGZ}","${VCFGZ}".tbi} . || operationfailed
 	# Prepare variable storing filename for R to read input tree
 	export VCFR="${VCFGZ}" || operationfailed
 	# Do the calculations
-	R CMD BATCH --no-save --no-restore rad_5_hardfilter_2_stats.r "${VCFGZ%.vcf.gz}".log
+	R CMD BATCH --no-save --no-restore rad_5_hardfilter_2_stats.r ${VCFGZ%.vcf.gz}.log
 	# Discard the variable
 	unset VCFR || operationfailed
 	# Cleanup

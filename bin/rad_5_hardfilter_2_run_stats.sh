@@ -34,8 +34,8 @@ echo
 
 # Copy data
 echo "Copying..."
-echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
-cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{${REF%.*}*,rpackages,bin/rad_5_hardfilter_2_stats.r} "${SCRATCHDIR}"/ || exit 1
+echo "Scripts etc. - /storage/pruhonice1-ibot/home/${LOGNAME}/radseq/"
+cp -a /storage/pruhonice1-ibot/home/"${LOGNAME}"/radseq/{${REF%.*}*,rpackages,bin/rad_5_hardfilter_2_stats.r} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process"
 cp "${DATADIR}"/arenosa/* "${SCRATCHDIR}"/ || exit 1
 # cp "${DATADIR}"/lyrata/* "${SCRATCHDIR}"/ || exit 1

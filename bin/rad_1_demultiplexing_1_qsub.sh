@@ -38,8 +38,8 @@ echo
 
 # Copy data
 echo "Copying..."
-echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
-cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{bin/rad_1_demultiplexing_2_run.sh,demultiplexing_lists/"${TABLE}"} "${SCRATCHDIR}"/ || exit 1
+echo "Scripts etc. - /storage/pruhonice1-ibot/home/${LOGNAME}/radseq/"
+cp -a /storage/pruhonice1-ibot/home/"${LOGNAME}"/radseq/{bin/rad_1_demultiplexing_2_run.sh,demultiplexing_lists/"${TABLE}"} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process - ${DATADIR}/${LIBRARY}"
 cp -a "${DATADIR}"/"${LIBRARY}"/0_raw_illumina "${SCRATCHDIR}"/ || exit 1
 echo

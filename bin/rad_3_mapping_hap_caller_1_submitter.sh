@@ -9,7 +9,7 @@
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 # Set data directories
-WORKDIR="/storage/praha1/home/${LOGNAME}/radseq"
+WORKDIR="/storage/pruhonice1-ibot/home/${LOGNAME}/radseq"
 
 # Location of data to map and call variants
 DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad'

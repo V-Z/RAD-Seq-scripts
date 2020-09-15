@@ -39,8 +39,8 @@ echo
 
 # Copy data
 echo "Copying..."
-echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
-cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{blacklisty.intervals,${REF%.*}*,rpackages,bin/rad_5_hardfilter_2_run.sh,bin/rad_5_hardfilter_2_stats.r} "${SCRATCHDIR}"/ || exit 1
+echo "Scripts etc. - /storage/pruhonice1-ibot/home/${LOGNAME}/radseq/"
+cp -a /storage/pruhonice1-ibot/home/"${LOGNAME}"/radseq/{blacklisty.intervals,${REF%.*}*,rpackages,bin/rad_5_hardfilter_2_run.sh,bin/rad_5_hardfilter_2_stats.r} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process - ${DATADIR}"
 cp "${DATADIR}"/"${SAMPLE}" "${DATADIR}"/"${SAMPLE}".tbi "${SCRATCHDIR}"/ || exit 1
 echo

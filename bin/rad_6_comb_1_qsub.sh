@@ -40,8 +40,8 @@ echo
 
 # Copy data
 echo "Copying..."
-echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
-cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{blacklisty.intervals,${REF%.*}*,bin/rad_6_comb_2_run.sh} "${SCRATCHDIR}"/ || exit 1
+echo "Scripts etc. - /storage/pruhonice1-ibot/home/${LOGNAME}/radseq/"
+cp -a /storage/pruhonice1-ibot/home/"${LOGNAME}"/radseq/{blacklisty.intervals,${REF%.*}*,bin/rad_6_comb_2_run.sh} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process - ${DATADIR}"
 cp "${DATADIR}"/"${SAMPLE}" "${DATADIR}"/"${SAMPLE}".tbi "${SCRATCHDIR}"/ || exit 1
 echo

@@ -52,8 +52,8 @@ echo
 
 # Copy data
 echo "Copying..."
-echo "Scripts etc. - /storage/praha1/home/${LOGNAME}/radseq/"
-cp -a /storage/praha1/home/"${LOGNAME}"/radseq/{${REF%.*}*,bin/rad_3_mapping_hap_caller_3_run.sh} "${SCRATCHDIR}"/ || exit 1
+echo "Scripts etc. - /storage/pruhonice1-ibot/home/${LOGNAME}/radseq/"
+cp -a /storage/pruhonice1-ibot/home/"${LOGNAME}"/radseq/{${REF%.*}*,bin/rad_3_mapping_hap_caller_3_run.sh} "${SCRATCHDIR}"/ || exit 1
 echo "Data to process - ${DATADIR}/${LIBRARY}/2_trimmed/${ALNF}"
 cp -a "${DATADIR}"/"${LIBRARY}"/2_trimmed/"${ALNF}"/* "${SCRATCHDIR}"/ || exit 1
 echo "and ${DATADIR}/${LIBRARY}/3_dedup/${ALNF}"

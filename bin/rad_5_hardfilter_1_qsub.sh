@@ -34,7 +34,6 @@ echo
 # Required modules
 echo "Loading modules"
 module add jdk-8 || exit 1
-module add parallel-20200322 || exit 1
 module add bcftools-1.10.2 || exit 1
 echo
 

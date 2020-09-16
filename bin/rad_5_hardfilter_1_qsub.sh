@@ -35,6 +35,7 @@ echo
 echo "Loading modules"
 module add jdk-8 || exit 1
 module add bcftools-1.10.2 || exit 1
+module add R-4.0.0-gcc || exit 1
 echo
 
 # Copy data

@@ -348,34 +348,40 @@ echo
 
 exit
 
+
+
 cd $SCRATCHDIR
 mkdir tmp
+cp -a ~/radseq/ref/arabidopsis/* .
 module add jdk-8
+cp /storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/2_filtered_vcf/arenosa/{arenosa_var.join.vcf.filtered.snp.hardfilter.pass.bial.dp4.dpan4.percmiss0.7.vcf*,arenosa_all.join.vcf.filtered.invar.qual.pass.vcf*} .
 
 
-java -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T CombineVariants -R alygenomes.fasta -V arenosa_all.join.raw.vcf.filtered.raw.hardfilter.snp.pass.filt.dp4.dpan4.percmiss0.7.vcf.gz -V arenosa_var.join.raw.vcf.filtered.raw.hardfilter.snp.pass.bial.dp4.dpan4.percmiss0.7.vcf.gz -o arenosa_comb.vcf.gz -genotypeMergeOptions UNSORTED -filteredRecordsMergeType KEEP_UNCONDITIONAL
 
-java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.fasta -V arenosa_comb.vcf.gz -o arenosa_comb.dp4.vcf.gz --genotypeFilterExpression "DP < 4" --genotypeFilterName DP-4 --setFilteredGtToNocall
+java -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T CombineVariants -R alygenomes.fasta -V arenosa_all.join.vcf.filtered.invar.qual.pass.vcf.gz -V arenosa_var.join.vcf.filtered.snp.hardfilter.pass.bial.dp4.dpan4.percmiss0.7.vcf.gz -o arenosa_comb.vcf.gz -genotypeMergeOptions UNSORTED -filteredRecordsMergeType KEEP_UNCONDITIONAL | tee -a arenosa_comb.log
 
-java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.fasta -V arenosa_comb.dp4.vcf.gz -o arenosa_comb.dp4.dpan4.vcf.gz --filterExpression "DP / AN < 4" --filterName DP-AN-4
+java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.fasta -V arenosa_comb.vcf.gz -o arenosa_comb.dp4.vcf.gz --genotypeFilterExpression "DP < 4" --genotypeFilterName DP-4 --setFilteredGtToNocall | tee -a arenosa_comb.log
 
-java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V arenosa_comb.dp4.dpan4.vcf.gz -o arenosa_comb.dp4.dpan4.percmiss0.7.vcf.gz --maxNOCALLfraction 0.7
+java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.fasta -V arenosa_comb.dp4.vcf.gz -o arenosa_comb.dp4.dpan4.vcf.gz --filterExpression "DP / AN < 4" --filterName DP-AN-4 | tee -a arenosa_comb.log
 
-
-java -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T CombineVariants -R alygenomes.fasta -V arenosa_600_U_rad.merged.vcf.gz -V arenosa_comb.dp4.dpan4.percmiss0.7.vcf.gz -o arenosa_comb_600.vcf.gz -genotypeMergeOptions UNIQUIFY
-
-java -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V arenosa_comb_600.vcf.gz -o arenosa_comb_600.vcf.gz -selectType SNP -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals blacklisty.intervals
-
-java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.fasta -V arenosa_comb_600.vcf.gz -o arenosa_comb_600.dp8.vcf.gz --genotypeFilterExpression "DP < 8" --genotypeFilterName DP-8 --setFilteredGtToNocall
-
-java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.fasta -V arenosa_comb_600.dp8.vcf.gz -o arenosa_comb_600.dp8.dpan8.vcf.gz --filterExpression "DP / AN < 8" --filterName DP-AN-8
-
-java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V arenosa_comb_600.dp8.dpan8.vcf.gz -o arenosa_comb_600.dp8.dpan8.percmiss05.vcf.gz --maxNOCALLfraction 0.5
-
-java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /auto/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V arenosa_comb_600.dp8.dpan8.vcf.gz -o arenosa_comb_600.dp8.dpan8.percmiss08.vcf.gz --maxNOCALLfraction 0.8
+java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V arenosa_comb.dp4.dpan4.vcf.gz -o arenosa_comb.dp4.dpan4.percmiss0.7.vcf.gz --maxNOCALLfraction 0.7 | tee -a arenosa_comb.log
 
 
-find . -name "*.vcf.gz" | parallel -j 2 "echo '{/}' && bcftools stats -F alygenomes.fasta '{}' > '{.}'.stats.txt"
 
-cp -a $SCRATCHDIR /auto/pruhonice1-ibot/shared/brassicaceae/rad_vcf/combined_vcf/arenosa/
+java -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T CombineVariants -R alygenomes.fasta -V arenosa_600_U_rad.merged.vcf.gz -V arenosa_comb.dp4.dpan4.percmiss0.7.vcf.gz -o arenosa_comb_600.vcf.gz -genotypeMergeOptions UNIQUIFY
+
+java -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V arenosa_comb_600.vcf.gz -o arenosa_comb_600.vcf.gz -selectType SNP -L scaffold_1 -L scaffold_2 -L scaffold_3 -L scaffold_4 -L scaffold_5 -L scaffold_6 -L scaffold_7 -L scaffold_8 --excludeIntervals blacklisty.intervals
+
+java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.fasta -V arenosa_comb_600.vcf.gz -o arenosa_comb_600.dp8.vcf.gz --genotypeFilterExpression "DP < 8" --genotypeFilterName DP-8 --setFilteredGtToNocall
+
+java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T VariantFiltration -R alygenomes.fasta -V arenosa_comb_600.dp8.vcf.gz -o arenosa_comb_600.dp8.dpan8.vcf.gz --filterExpression "DP / AN < 8" --filterName DP-AN-8
+
+java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V arenosa_comb_600.dp8.dpan8.vcf.gz -o arenosa_comb_600.dp8.dpan8.percmiss05.vcf.gz --maxNOCALLfraction 0.5
+
+java -Xmx19g -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar /storage/pruhonice1-ibot/home/gunnera/bin/GenomeAnalysisTK.jar -T SelectVariants -R alygenomes.fasta -V arenosa_comb_600.dp8.dpan8.vcf.gz -o arenosa_comb_600.dp8.dpan8.percmiss08.vcf.gz --maxNOCALLfraction 0.8
+
+
+
+cp -a $SCRATCHDIR /storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/3_combined_vcf/
+
 

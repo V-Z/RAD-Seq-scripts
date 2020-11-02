@@ -17,6 +17,7 @@ trap 'cp -a "${SCRATCHDIR}" "${DATADIR}"/ && clean_scratch' TERM
 # Location of data to merge
 DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/0_for_join/arenosa'
 # DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/0_for_join/lyrata'
+# DATADIR='/storage/pruhonice1-ibot/shared/brassicaceae/rad_vcf/0_for_join/minuartia'
 
 # Reference
 # ref/arabidopsis/alygenomes.fasta ref/cardamine/pseudohap_Camara_90M_10kb.fasta ref/minuartia/minuartia_combined_ref.fasta

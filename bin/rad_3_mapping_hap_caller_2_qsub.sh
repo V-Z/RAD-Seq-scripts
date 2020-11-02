@@ -67,7 +67,7 @@ echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./rad_3_mapping_hap_caller_3_run.sh -f "${ALNF}" -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 16g -p /software/picard/2.22.1/build/libs/picard.jar -g /auto/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar | tee mapping_hap_caller."${ALNF}".log
+./rad_3_mapping_hap_caller_3_run.sh -f "${ALNF}" -a "${REFB}" -j /packages/run/jdk-8/current/bin/java -m 16g -p /software/picard/2.22.1/build/libs/picard.jar -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar | tee mapping_hap_caller."${ALNF}".log
 echo
 
 # Remove unneeded file

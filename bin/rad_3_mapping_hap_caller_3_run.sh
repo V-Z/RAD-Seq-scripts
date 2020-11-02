@@ -209,13 +209,13 @@ echo "Mapping of paired and orphaned reads and postprocessing of output BAM file
 
 # Do the mapping separately paired files and the orphaned reads (reads without a mate)
 echo "Starting mapping of paired reads at $(date)"
-{ bwa mem "${REF}" "${FQ}".dedup.R1.f*q* "${FQ}".dedup.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".paired.bam; } || operationfailed
+{ bwa mem  -t 2 "${REF}" "${FQ}".dedup.R1.f*q* "${FQ}".dedup.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".paired.bam; } || operationfailed
 echo
 echo "Starting mapping of orphaned reads (R1) at $(date)"
-{ bwa mem "${REF}" "${FQ}".unp.R1.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R1.bam; } || operationfailed
+{ bwa mem  -t 2 "${REF}" "${FQ}".unp.R1.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R1.bam; } || operationfailed
 echo
 echo "Starting mapping of orphaned reads (R2) at $(date)"
-{ bwa mem "${REF}" "${FQ}".unp.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R2.bam; } || operationfailed
+{ bwa mem  -t 2 "${REF}" "${FQ}".unp.R2.f*q* | samtools view -bu | samtools sort -l 9 -o "${FQ}".unpaired.R2.bam; } || operationfailed
 echo
 echo "Finished mapping of paired and orphaned reads at $(date)"
 echo
@@ -253,10 +253,10 @@ echo
 
 if ls ./*dip*.rg.bam 1> /dev/null 2>&1; then # Diploids
 	echo "Processing diploid at $(date)"
-	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I "${FQ}".rg.bam -ERC GVCF -ploidy 2 -o "${FQ}".raw.g.vcf.gz || operationfailed
+	"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I "${FQ}".rg.bam -ERC GVCF -ploidy 2 -o "${FQ}".raw.g.vcf.gz -nct 2 || operationfailed
 	elif ls ./*tet*.rg.bam 1> /dev/null 2>&1; then # Tetraploids
 		echo "Processing tetraploid at $(date)"
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I "${FQ}".rg.bam -ERC GVCF -ploidy 4 -o "${FQ}".raw.g.vcf.gz || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATKJ}" -R "${REF}" -T HaplotypeCaller -I "${FQ}".rg.bam -ERC GVCF -ploidy 4 -o "${FQ}".raw.g.vcf.gz -nct 2 || operationfailed
 		else
 			echo "The name of the sample does not allow to find out if it is diploid or tetraploid!"
 			echo

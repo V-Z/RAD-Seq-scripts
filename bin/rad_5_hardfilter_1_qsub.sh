@@ -59,8 +59,8 @@ echo
 
 # Running the task
 echo "Preprocessing the FASTQ files..."
-./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n ${SAMPLE%.*}.filtered -a "${REFB}" -m 95g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.5 -w 4 -y 4 | tee ${SAMPLE%.*}_hardfilter.log
-# ./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n ${SAMPLE%.*}.filtered -a "${REFB}" -m 95g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.5 -w 4 -y 4 -i | tee ${SAMPLE%.*}_hardfilter.log
+./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n ${SAMPLE%.*}.filtered -a "${REFB}" -e blacklisty.intervals -m 95g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.2 -w 8 -y 8 | tee ${SAMPLE%.*}_hardfilter.log
+# ./rad_5_hardfilter_2_run.sh -f "${SAMPLE}" -n ${SAMPLE%.*}.filtered -a "${REFB}" -e blacklisty.intervals -m 95g -g /storage/pruhonice1-ibot/home/"${LOGNAME}"/bin/GenomeAnalysisTK.jar -l 0.5 -w 8 -y 8 -i | tee ${SAMPLE%.*}_hardfilter.log
 echo
 
 # Remove unneeded file

@@ -433,21 +433,29 @@ if [ "${INVAR}" == 'TRUE' ]; then
 		echo "Marked filtered sites were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz"
 		echo
 
-		# Set the filtering for required minimal average coverage for each called allele
-		echo "Checking if each allele that is called is covered by at least ${MINDPANCOV} reads on average"
-		echo
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz --filterExpression "DP / AN < ${MINDPANCOV}" --filterName DP-AN-"${MINDPANCOV}" || operationfailed
-		echo
-		echo "Marked filtered sites were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.vcf.gz"
-		echo
+# 		# Set the filtering for required minimal average coverage for each called allele
+# 		echo "Checking if each allele that is called is covered by at least ${MINDPANCOV} reads on average"
+# 		echo
+# 		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T VariantFiltration -R "${REF}" -V ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz --filterExpression "DP / AN < ${MINDPANCOV}" --filterName DP-AN-"${MINDPANCOV}" || operationfailed
+# 		echo
+# 		echo "Marked filtered sites were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.vcf.gz"
+# 		echo
 
 		# Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
 		echo "Selecting variants based on presence in ${GENOTFILTDP} of indivs in ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz joint VCF..."
 		echo
-		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".percmiss"${MAXFRACTFILTGENOT}".vcf.gz --maxNOCALLfraction "${MAXFRACTFILTGENOT}" || operationfailed
+		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".percmiss"${MAXFRACTFILTGENOT}".vcf.gz --maxNOCALLfraction "${MAXFRACTFILTGENOT}" || operationfailed
 		echo
 		echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.percmiss${MAXFRACTFILTGENOT}.vcf.gz"
 		echo
+
+# 		# Select variants based on this interval list (NB variants with < defined coverage will be still present in VCF)
+# 		echo "Selecting variants based on presence in ${GENOTFILTDP} of indivs in ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.vcf.gz joint VCF..."
+# 		echo
+# 		"${JAVA}" -Xmx"${JAVAMEM}" -Djava.io.tmpdir="${SCRATCHDIR}"/tmp -jar "${GATK}" -T SelectVariants -R "${REF}" -V ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".vcf.gz -o ${VCFFILESNPBIAL%.vcf.gz}.dp"${GENOTFILTDP}".dpan"${MINDPANCOV}".percmiss"${MAXFRACTFILTGENOT}".vcf.gz --maxNOCALLfraction "${MAXFRACTFILTGENOT}" || operationfailed
+# 		echo
+# 		echo "Final selected variants were saved as ${VCFFILESNPBIAL%.vcf.gz}.dp${GENOTFILTDP}.dpan${MINDPANCOV}.percmiss${MAXFRACTFILTGENOT}.vcf.gz"
+# 		echo
 
 		fi
 echo

@@ -3,9 +3,14 @@
 **.backup
 **.bak
 
-# Exclude references (keep only FASTA files)
-**.dict*
-**.fasta.*
+# # Exclude references (keep only FASTA files)
+# **.dict*
+# **.fasta.*
+
+# Ignore references
+ref/*
+# But include README
+!ref/README.md
 
 # Ignore all installed R packages
 rpackages/*
